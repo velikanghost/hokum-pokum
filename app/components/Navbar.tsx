@@ -7,7 +7,6 @@ import {
 } from '@/components/ui/navigation-menu'
 import React, { useState } from 'react'
 import { RiMenu2Line, RiTwitterXLine } from 'react-icons/ri'
-import { FaBars } from 'react-icons/fa'
 import { MobileSidebar } from './MobileSidebar'
 import { NavigationMenuLink } from '@radix-ui/react-navigation-menu'
 import { Button } from '@/components/ui/button'
@@ -59,6 +58,7 @@ const Navbar = () => {
                 className="flex justify-center items-center gap-2 hover:animate-bounce h-full py-4 text-base"
                 href={item.link}
                 key={i}
+                target={item.name === 'Home' ? '_parent' : '_blank'}
               >
                 {item.icon} {item.name}
               </NavigationMenuLink>

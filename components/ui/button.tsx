@@ -10,9 +10,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         nav: 'bg-[#EBE8E2] text-secondary-foreground hover:bg-[#EBE8E2]/90',
-        default:
-          'bg-secondary-foreground text-primary-foreground hover:bg-secondary-foreground/90',
-        //default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        // default:
+        //   'bg-secondary-foreground text-primary-foreground hover:bg-secondary-foreground/90',
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
         destructive:
           'bg-destructive text-destructive-foreground hover:bg-destructive/90',
         outline:

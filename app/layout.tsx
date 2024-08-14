@@ -16,9 +16,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   //1C4641
+  //bg-secondary-foreground
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-secondary-foreground`}>
+      <body className={`${inter.className}  bg-[#1C4641]`}>
         <Navbar />
         {children}
       </body>
