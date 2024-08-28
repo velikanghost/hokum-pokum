@@ -19,7 +19,7 @@ export default function RootLayout({
   //bg-secondary-foreground
   return (
     <html lang="en">
-      <body className={`${inter.className}  bg-[#1C4641]`}>
+      <body className={`${inter.className}  bg-[#1F2026]`}>
         <Navbar />
         {children}
       </body>
