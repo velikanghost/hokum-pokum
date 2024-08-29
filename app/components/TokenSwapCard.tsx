@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { Tab } from "./CheckoutComponent";
 
 interface Props {
   network: string;
@@ -11,6 +12,10 @@ interface Props {
 interface WalletAddressCardProps {
   network: string;
   token: string;
+}
+
+interface SelectTokenChainCardProps {
+  setActiveTab: (value: Tab) => void;
 }
 
 export const TokenSwapCard = ({ network, token, amount, isPayCard }: Props) => {
@@ -49,9 +54,14 @@ export const TokenSwapCard = ({ network, token, amount, isPayCard }: Props) => {
   );
 };
 
-export const SelectTokenChainCard = () => {
+export const SelectTokenChainCard = ({
+  setActiveTab,
+}: SelectTokenChainCardProps) => {
   return (
-    <div className="token-swap-card my-3">
+    <div
+      className="token-swap-card my-3 select-token"
+      onClick={() => setActiveTab("SELECT_TOKEN")}
+    >
       <h4>You pay</h4>
       <div className="swap-area empty pb-3">
         <span className="token-swap__text">Select chain/ token</span>

@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { RiWallet2Fill } from "react-icons/ri";
@@ -7,8 +9,12 @@ import {
   TokenSwapCard,
   WalletAddressCard,
 } from "../components/TokenSwapCard";
+import { SelectToken } from "./SelectToken";
+
+export type Tab = "DEFAULT" | "SELECT_TOKEN";
 
 export const CheckoutComponent = () => {
+  const [activeTab, setActiveTab] = useState<Tab>("DEFAULT");
   return (
     <div className="checkout-container text-secondary">
       <div className="checkout-header font-headings">
@@ -29,22 +35,29 @@ export const CheckoutComponent = () => {
           </Button>
           <h3 className="title">Checkout</h3>
         </div>
-        <div className="checkout-card__body">
-          <TokenSwapCard network={"Tron"} token={"DASH"} amount={30000} />
-          {/* <TokenSwapCard
+        {activeTab === "DEFAULT" && (
+          <>
+            <div className="checkout-card__body">
+              <TokenSwapCard network={"Tron"} token={"DASH"} amount={30000} />
+              {/* <TokenSwapCard
               network={"Tron"}
               token={"DASH"}
               amount={30000}
               isPayCard
             /> */}
-          <SelectTokenChainCard />
-          <WalletAddressCard network={"Tron"} token={"DASH"} />
-          <Button className="btn-primary bg-secondary text-black uppercase w-full hover:bg-black hover:text-secondary">
-            <span className="mr-3">Connect Wallet</span>
-            <RiWallet2Fill size={18} />
-          </Button>
-        </div>
-        <div className="checkout-card__footer"></div>
+              <SelectTokenChainCard setActiveTab={setActiveTab} />
+              <WalletAddressCard network={"Tron"} token={"DASH"} />
+              <Button className="btn-primary bg-secondary text-black uppercase w-full hover:bg-black hover:text-secondary">
+                <span className="mr-3">Connect Wallet</span>
+                <RiWallet2Fill size={18} />
+              </Button>
+            </div>
+            <div className="checkout-card__footer"></div>
+          </>
+        )}
+        {activeTab === "SELECT_TOKEN" && (
+          <SelectToken setActiveTab={setActiveTab} />
+        )}
       </div>
     </div>
   );
