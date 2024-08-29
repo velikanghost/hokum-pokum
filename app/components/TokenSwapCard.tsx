@@ -1,21 +1,21 @@
-import React from "react";
-import Image from "next/image";
-import { Tab } from "./CheckoutComponent";
+import React from 'react'
+import Image from 'next/image'
+import { Tab } from './CheckoutComponent'
 
 interface Props {
-  network: string;
-  token: string;
-  amount: number;
-  isPayCard?: boolean;
+  network: string
+  token: string
+  amount: number
+  isPayCard?: boolean
 }
 
 interface WalletAddressCardProps {
-  network: string;
-  token: string;
+  network: string
+  token: string
 }
 
 interface SelectTokenChainCardProps {
-  setActiveTab: (value: Tab) => void;
+  setActiveTab: (value: Tab) => void
 }
 
 export const TokenSwapCard = ({ network, token, amount, isPayCard }: Props) => {
@@ -27,14 +27,14 @@ export const TokenSwapCard = ({ network, token, amount, isPayCard }: Props) => {
         <div className="token-swap__details">
           <div className="token-image-details">
             <Image
-              src={"/assets/dash.svg"}
+              src={'/assets/trx.svg'}
               className="token-image"
               alt="token"
               width={40}
               height={40}
             />
             <Image
-              src={"/assets/trx.svg"}
+              src={'/assets/trx.svg'}
               className="network-image"
               alt="token"
               width={20}
@@ -48,11 +48,13 @@ export const TokenSwapCard = ({ network, token, amount, isPayCard }: Props) => {
         </div>
       </div>
       <div className="fiat-area pt-3">
-        <span>$35,652 USDT on {network}</span>
+        <span>
+          ${100 * 0.159} USDT on {network}
+        </span>
       </div>
     </div>
-  );
-};
+  )
+}
 
 export const SelectTokenChainCard = ({
   setActiveTab,
@@ -60,7 +62,7 @@ export const SelectTokenChainCard = ({
   return (
     <div
       className="token-swap-card my-3 select-token"
-      onClick={() => setActiveTab("SELECT_TOKEN")}
+      onClick={() => setActiveTab('SELECT_TOKEN')}
     >
       <h4>You pay</h4>
       <div className="swap-area empty pb-3">
@@ -70,8 +72,8 @@ export const SelectTokenChainCard = ({
         {/* <span>$35,652 USDT on {network}</span> */}
       </div>
     </div>
-  );
-};
+  )
+}
 
 export const WalletAddressCard = ({
   network,
@@ -85,14 +87,14 @@ export const WalletAddressCard = ({
         <div className="token-swap__details">
           <div className="token-image-details">
             <Image
-              src={"/assets/dash.svg"}
+              src={'/assets/dash.svg'}
               className="token-image"
               alt="token"
               width={40}
               height={40}
             />
             <Image
-              src={"/assets/trx.svg"}
+              src={'/assets/trx.svg'}
               className="network-image"
               alt="token"
               width={20}
@@ -109,5 +111,5 @@ export const WalletAddressCard = ({
         <span>$35,652 USDT on {network}</span>
       </div> */}
     </div>
-  );
-};
+  )
+}
