@@ -1,154 +1,166 @@
 @use '../abstracts/variables' as *;
 
-.checkout-container{
-    max-width: 450px;
-    margin: auto;
+.checkout-container {
+  max-width: 500px;
+  margin: auto;
 }
-.checkout-header{
-    font-size: 1.35rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 8px 0px;
+.checkout-header {
+  font-size: 1.35rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0px;
 }
-.checkout-header img.logo{
-    border-radius: 50%;
-    width: 32px;
+.checkout-header img.logo {
+  border-radius: 50%;
+  width: 32px;
 }
 
-.checkout-card{
-    min-height: 420px;
+.checkout-card {
+  min-height: 420px;
+  width: 100%;
+  background: #0e0e11;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.checkout-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.checkout-card__header .title {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.token-swap-card {
+  padding: 16px;
+  border: 1px solid #424350;
+  border-radius: 8px;
+}
+.swap-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #424350;
+}
+.swap-area .token-swap__amount {
+  width: 50%;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.swap-area.empty {
+  border: none;
+  min-height: 50px;
+}
+.swap-area.empty .token-swap__text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  width: 100%;
+  color: #a8acc3;
+}
+.swap-area .token-swap__details {
+  display: flex;
+  align-items: center;
+  width: 50%;
+  background-color: #1f2026;
+  padding: 8px;
+  border-radius: 8px;
+  gap: 4px;
+}
+.swap-area .token-swap__details .token-image-details {
+  width: 40px;
+  height: 40px;
+  // background-color: #fff;
+  position: relative;
+}
+.swap-area .token-swap__details .token-image-details .network-image {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+.token-name-details .network-name {
+  font-size: 12px;
+}
+
+.fiat-area {
+  font-size: 12px;
+  color: #a8acc3;
+}
+
+.token-swap-card.select-token,
+.token-details {
+  cursor: pointer;
+}
+.token-swap-card.select-token:hover,
+.token-details:hover {
+  background-color: #1f2026;
+}
+
+.pay-with-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.network-options {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.network-options .network {
+  border-radius: 8px;
+  background-color: #1f2026;
+  padding: 8px;
+}
+.network-options .network .network-image {
+  width: 100%;
+}
+.search-form {
+  display: flex;
+  align-items: center;
+  background-color: #1f2026;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+.search-form input {
+  width: 100%;
+  background-color: transparent;
+}
+.search-form svg {
+  fill: #a8acc3;
+}
+.tokens-list {
+  display: grid;
+  gap: 16px;
+  max-height: 300px;
+  overflow: scroll;
+}
+.token-details {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  gap: 12px;
+  padding: 8px;
+}
+.token-details .token-image {
+  width: 50px;
+}
+.token-details .token-name {
+  font-size: 14px;
+  color: #a8acc3;
+}
+
+@media screen and (max-width: 800px) {
+  .checkout-card {
+    width: 500px;
+    margin: 0 auto;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .checkout-card {
     width: 100%;
-    background: #0e0e11;
-    border-radius: 12px;
-    padding: 16px;
+    margin: 0 auto;
+  }
 }
-
-.checkout-card__header{
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-.checkout-card__header .title{
-    font-size: 1.15rem;
-    font-weight: 600;
-}
-.token-swap-card{
-    padding: 16px;
-    border: 1px solid #424350;
-    border-radius: 8px;
-}
-.swap-area{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    border-bottom: 1px solid #424350;
-}
-.swap-area .token-swap__amount{
-    width: 50%;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-.swap-area.empty{
-    border: none;
-    min-height: 50px;
-}
-.swap-area.empty .token-swap__text{
-    font-size: 1.5rem;
-    font-weight: 600;
-    width: 100%;
-    color: #a8acc3;
-}
-.swap-area .token-swap__details{
-    display: flex;
-    align-items: center;
-    width: 50%;
-    background-color: #1F2026;
-    padding: 8px;
-    border-radius: 8px;
-    gap: 4px;
-}
-.swap-area .token-swap__details .token-image-details{
-    width: 40px;
-    height: 40px;
-    // background-color: #fff;
-    position: relative;
-}
-.swap-area .token-swap__details .token-image-details .network-image{
-    position: absolute;
-    bottom: 0;
-    right: 0;
-}
-.token-name-details .network-name{
-    font-size: 12px;
-}
-
-.fiat-area{
-    font-size: 12px;
-    color: #a8acc3;
-}
-
-.token-swap-card.select-token, .token-details{
-    cursor: pointer;
-}
-.token-swap-card.select-token:hover, .token-details:hover{
-    background-color: #1F2026;
-}
-
-.pay-with-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.network-options{
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-}
-.network-options .network{
-    border-radius: 8px;
-    background-color: #1F2026;
-    padding:8px;
-}
-.network-options .network .network-image{
-    width: 100%;   
-}
-.search-form{
-    display: flex;
-    align-items: center;
-    background-color: #1F2026;
-    padding: 8px 16px;
-    border-radius: 8px;
-}
-.search-form input{
-    width: 100%;
-    background-color: transparent;
-}
-.search-form svg{
-    fill: #a8acc3;
-}
-.tokens-list{
-    display: grid;
-    gap: 16px;
-    max-height: 300px;
-    overflow: scroll;
-}
-.token-details{
-    display: grid;
-    grid-template-columns: 50px 1fr;
-    gap: 12px;
-    padding: 8px;
-}
-.token-details .token-image{
-    width: 50px;
-}
-.token-details .token-name{
-    font-size: 14px;
-    color: #a8acc3;
-}
-// .token-details .token-symbol{
-//     font-size: 20px;
-//     // color: #a8acc3;
-// }
