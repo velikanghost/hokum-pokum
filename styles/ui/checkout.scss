@@ -101,7 +101,7 @@
 
 .pay-with-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
 }
 .network-options {
@@ -113,6 +113,12 @@
   border-radius: 8px;
   background-color: #1f2026;
   padding: 8px;
+  cursor: pointer;
+}
+.network-options .network.active, .network-options .network:hover {
+  border: 3px solid #fff;
+  background-color: #373943;
+  // padding: 8px;
 }
 .network-options .network .network-image {
   width: 100%;
@@ -127,6 +133,8 @@
 .search-form input {
   width: 100%;
   background-color: transparent;
+  outline: none;
+  border: none;
 }
 .search-form svg {
   fill: #a8acc3;
@@ -135,7 +143,7 @@
   display: grid;
   gap: 16px;
   max-height: 300px;
-  overflow: scroll;
+  overflow-y: scroll;
 }
 .token-details {
   display: grid;
@@ -149,6 +157,12 @@
 .token-details .token-name {
   font-size: 14px;
   color: #a8acc3;
+}
+
+.change-token-btn{
+  padding: 4px;
+  margin-bottom: 4px;
+  font-size: 12px;
 }
 
 @media screen and (max-width: 800px) {
