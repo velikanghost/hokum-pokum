@@ -1,127 +1,141 @@
-'use client'
+"use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import Image from 'next/image'
-import { Button } from '@/components/ui/button'
-import { RiLogoutBoxFill, RiWallet2Fill } from 'react-icons/ri'
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import {
+  RiCheckDoubleFill,
+  RiLogoutBoxFill,
+  RiWallet2Fill,
+} from "react-icons/ri";
 import {
   SelectTokenChainCard,
   TokenSwapCard,
   WalletAddressCard,
-} from '../components/TokenSwapCard'
-import { SelectToken } from './SelectToken'
+} from "../components/TokenSwapCard";
+import { SelectToken } from "./SelectToken";
 import {
   AdapterState,
   WalletReadyState,
-} from '@tronweb3/tronwallet-abstract-adapter'
-import { TronLinkAdapter } from '@tronweb3/tronwallet-adapters'
-import { Token } from '@/lib/types'
+} from "@tronweb3/tronwallet-abstract-adapter";
+import { TronLinkAdapter } from "@tronweb3/tronwallet-adapters";
+import { Token } from "@/lib/types";
 import {
   contractABI,
   contractAddress,
   tokens,
   recipientAddress,
-} from '@/lib/data'
-import { useConversion } from '@/hooks/useConversion'
+} from "@/lib/data";
+import { useConversion } from "@/hooks/useConversion";
+import { LoadingIcon } from "./LoadingIcon";
 
-export type Tab = 'DEFAULT' | 'SELECT_TOKEN'
+export type Tab = "DEFAULT" | "SELECT_TOKEN";
 
 export const CheckoutComponent = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('DEFAULT')
+  const [activeTab, setActiveTab] = useState<Tab>("DEFAULT");
   const [readyState, setReadyState] = useState<AdapterState | WalletReadyState>(
-    WalletReadyState.NotFound,
-  )
-  const [account, setAccount] = useState('')
-  const [network, setNetwork] = useState<any>({})
-  const [signedMessage, setSignedMessage] = useState('')
-  const [merchantToken, setMerchantToken] = useState<Token>(tokens[1])
-  const [merchantAmount, setMerchantAmount] = useState<number>(100)
-  const [userToken, setUserToken] = useState<Token>()
-  const { setTokenSymbol, tokenPrice } = useConversion()
+    WalletReadyState.NotFound
+  );
+  const [account, setAccount] = useState("");
+  const [network, setNetwork] = useState<any>({});
+  const [signedMessage, setSignedMessage] = useState("");
+  const [merchantToken, setMerchantToken] = useState<Token>(tokens[1]);
+  const [merchantAmount, setMerchantAmount] = useState<number>(100);
+  const [userToken, setUserToken] = useState<Token>();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isTransactionComplete, setIsTransactionComplete] =
+    useState<boolean>(false);
+  const { setTokenSymbol, tokenPrice } = useConversion();
 
-  const adapter = useMemo(() => new TronLinkAdapter(), [])
+  const adapter = useMemo(() => new TronLinkAdapter(), []);
 
   const swapAmount = useMemo(
     () => tokenPrice * merchantAmount,
-    [merchantAmount, tokenPrice],
-  )
+    [merchantAmount, tokenPrice]
+  );
 
   const runTransaction = useCallback(async () => {
+    setIsLoading(true);
     // Ensure tronWeb is initialized with the connected wallet
-    const tronWeb = window.tronWeb
+    const tronWeb = window.tronWeb;
 
     // Check if the wallet is connected
     if (tronWeb && tronWeb.ready) {
-      console.log('Tron web is ready')
-      console.log('The network ', network)
+      console.log("Tron web is ready");
+      console.log("The network ", network);
       // The wallet is connected, proceed with contract interactions
 
-      const contract = await tronWeb.contract(contractABI, contractAddress)
+      const contract = await tronWeb.contract(contractABI, contractAddress);
 
       // Reading data example
-      const result = await contract.routerAddress().call()
-      console.log('Router address:', result)
+      const result = await contract.routerAddress().call();
+      console.log("Router address:", result);
 
       // Writing data example
       try {
-        const tronSwapAmount = tronWeb.toSun(swapAmount.toFixed(6))
+        const tronSwapAmount = tronWeb.toSun(swapAmount.toFixed(6));
         const response = await contract
           .inputSwap(merchantToken.address, tronSwapAmount, recipientAddress)
           .send({
             callValue: tronSwapAmount,
             shouldPollResponse: true, // Optional: waits for transaction confirmation
-          })
-        console.log('Transaction Response:', response)
+          });
+        setIsTransactionComplete(true);
+        console.log("Transaction Response:", response);
       } catch (error) {
-        console.error('Transaction failed:', error)
+        console.error("Transaction failed:", error);
       }
     } else {
-      console.error('TronWeb is not ready or wallet is not connected')
+      console.error("TronWeb is not ready or wallet is not connected");
     }
-  }, [network, swapAmount])
+    setIsLoading(false);
+  }, [network, swapAmount]);
 
   useEffect(() => {
-    setReadyState(adapter.state)
-    setAccount(adapter.address!)
+    setReadyState(adapter.state);
+    setAccount(adapter.address!);
 
-    adapter.on('connect', () => {
-      setAccount(adapter.address!)
-    })
+    adapter.on("connect", () => {
+      setAccount(adapter.address!);
+    });
 
-    adapter.on('readyStateChanged', (state) => {
-      setReadyState(state)
-    })
+    adapter.on("readyStateChanged", (state) => {
+      setReadyState(state);
+    });
 
-    adapter.on('accountsChanged', (data) => {
-      setAccount(data)
-    })
+    adapter.on("accountsChanged", (data) => {
+      setAccount(data);
+    });
 
-    adapter.on('chainChanged', (data) => {
-      setNetwork(data)
-    })
+    adapter.on("chainChanged", (data) => {
+      setNetwork(data);
+    });
 
-    adapter.on('disconnect', () => {
+    adapter.on("disconnect", () => {
       // when disconnect from wallet
-    })
+    });
     return () => {
       // remove all listeners when components is destroyed
-      adapter.removeAllListeners()
-    }
-  }, [adapter])
+      adapter.removeAllListeners();
+    };
+  }, [adapter]);
 
   useEffect(() => {
     if (userToken) {
-      console.log('The user token called')
-      setTokenSymbol(merchantToken.symbol)
+      console.log("The user token called");
+      setTokenSymbol(merchantToken.symbol);
     }
-  }, [merchantToken.symbol, setTokenSymbol, userToken?.name])
+  }, [merchantToken.symbol, setTokenSymbol, userToken?.name]);
 
   return (
-    <div className="flex-1 checkout-container text-secondary flex flex-col justify-center items-center lg:items-start">
+    <div
+      className="flex-1 checkout-container text-secondary flex flex-col justify-center items-center lg:items-start"
+      style={{ position: "relative" }}
+    >
       <div className="checkout-header font-headings">
         <Image
           className="logo"
-          src={'/assets/logo.jpg'}
+          src={"/assets/logo.jpg"}
           width={100}
           height={100}
           alt="Logo"
@@ -136,17 +150,17 @@ export const CheckoutComponent = () => {
           </Button> */}
           <h3 className="title">Checkout</h3>
         </div>
-        {activeTab === 'DEFAULT' && (
+        {activeTab === "DEFAULT" && (
           <>
             <div className="checkout-card__body">
               <TokenSwapCard
-                network={'Tron'}
+                network={"Tron"}
                 token={merchantToken}
                 amount={merchantAmount}
               />
               {userToken ? (
                 <TokenSwapCard
-                  network={'Tron'}
+                  network={"Tron"}
                   token={userToken}
                   amount={Number(swapAmount.toFixed(6))}
                   setActiveTab={setActiveTab}
@@ -156,30 +170,55 @@ export const CheckoutComponent = () => {
                 <SelectTokenChainCard setActiveTab={setActiveTab} />
               )}
               <WalletAddressCard
-                network={'Tether'}
+                network={"Tether"}
                 token={merchantToken || tokens[0]}
               />
               <Button
                 variant="nav"
-                className="btn-primary w-full"
+                className={`btn-primary w-full ${
+                  isTransactionComplete &&
+                  "bg-[#399a6b] text-white border border-[#399a6b]"
+                }`}
                 // disabled={adapter.connected}
                 onClick={() => (account ? runTransaction() : adapter.connect())}
+                disabled={isTransactionComplete}
               >
-                <span className="mr-3">{account || 'Connect Wallet'}</span>
-                {account ? (
-                  <RiLogoutBoxFill size={18} />
+                {isTransactionComplete ? (
+                  <>
+                    <span className="mr-3">Transaction Complete</span>
+                    <RiCheckDoubleFill size={18} />
+                  </>
                 ) : (
-                  <RiWallet2Fill size={18} />
+                  <>
+                    {userToken ? (
+                      <span className="mr-3">Checkout</span>
+                    ) : (
+                      <span className="mr-3">
+                        {account || "Connect Wallet"}
+                      </span>
+                    )}
+                    {account && !userToken ? (
+                      <RiLogoutBoxFill size={18} />
+                    ) : (
+                      <RiWallet2Fill size={18} />
+                    )}
+                  </>
                 )}
               </Button>
             </div>
             <div className="checkout-card__footer"></div>
           </>
         )}
-        {activeTab === 'SELECT_TOKEN' && (
+        {activeTab === "SELECT_TOKEN" && (
           <SelectToken setActiveTab={setActiveTab} setToken={setUserToken} />
         )}
       </div>
+      {isLoading && (
+        <div className="container-overlay">
+          <LoadingIcon />
+          <p>Please wait</p>
+        </div>
+      )}
     </div>
-  )
-}
+  );
+};
