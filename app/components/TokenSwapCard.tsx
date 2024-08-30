@@ -59,7 +59,7 @@ export const TokenSwapCard = ({
       </div>
       <div className="fiat-area flex justify-between items-center pt-3">
         <span>
-          ${100 * 0.159} USDT on {network}
+          ${100 * 6.27} TRX on {network}
         </span>
         {isPayCard && (
           <Button
