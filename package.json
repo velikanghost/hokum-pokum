@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@eth-optimism/sdk": "^3.3.2",
     "@noble/secp256k1": "^2.1.0",
     "@radix-ui/react-navigation-menu": "^1.2.0",
     "@radix-ui/react-slot": "^1.1.0",

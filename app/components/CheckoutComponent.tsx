@@ -16,7 +16,12 @@ import {
 } from '@tronweb3/tronwallet-abstract-adapter'
 import { TronLinkAdapter } from '@tronweb3/tronwallet-adapters'
 import { Token } from '@/lib/types'
-import { contractABI, contractAddress, tokens } from '@/lib/data'
+import {
+  contractABI,
+  contractAddress,
+  tokens,
+  recipientAddress,
+} from '@/lib/data'
 import { useConversion } from '@/hooks/useConversion'
 
 export type Tab = 'DEFAULT' | 'SELECT_TOKEN'
@@ -61,7 +66,7 @@ export const CheckoutComponent = () => {
       try {
         const tronSwapAmount = tronWeb.toSun(swapAmount.toFixed(6))
         const response = await contract
-          .inputSwap('TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf', tronSwapAmount)
+          .inputSwap(merchantToken.address, tronSwapAmount, recipientAddress)
           .send({
             callValue: tronSwapAmount,
             shouldPollResponse: true, // Optional: waits for transaction confirmation
@@ -151,8 +156,8 @@ export const CheckoutComponent = () => {
                 <SelectTokenChainCard setActiveTab={setActiveTab} />
               )}
               <WalletAddressCard
-                network={'Tron'}
-                token={userToken || tokens[0]}
+                network={'Tether'}
+                token={merchantToken || tokens[0]}
               />
               <Button
                 variant="nav"
