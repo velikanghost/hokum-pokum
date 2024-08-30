@@ -1,7 +1,7 @@
 @use '../abstracts/variables' as *;
 
 .checkout-container {
-  max-width: 500px;
+  max-width: 450px;
   margin: auto;
 }
 .checkout-header {
@@ -152,6 +152,10 @@
 }
 
 @media screen and (max-width: 800px) {
+  .checkout-container {
+    max-width: unset;
+  }
+
   .checkout-card {
     width: 500px;
     margin: 0 auto;
@@ -159,8 +163,11 @@
 }
 
 @media screen and (max-width: 500px) {
+  .checkout-container {
+    margin: unset;
+  }
+
   .checkout-card {
     width: 100%;
-    margin: 0 auto;
   }
 }
