@@ -1,9 +1,6 @@
 import { Tab } from './CheckoutComponent'
 import { Token } from '@/lib/types'
 import { Button } from '@/components/ui/button'
-import { toJS } from 'mobx'
-import { useContext } from 'react'
-import { StoreContext } from '@/mobx store/RootStore'
 
 interface Props {
   network: string
