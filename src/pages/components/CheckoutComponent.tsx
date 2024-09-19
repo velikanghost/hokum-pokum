@@ -25,12 +25,12 @@ export type Tab = 'DEFAULT' | 'SELECT_TOKEN'
 const CheckoutComponent = () => {
   const { connectStore } = useContext(StoreContext)
   const [acct, setAcct] = useState<JsonRpcSigner>()
-
   const [activeTab, setActiveTab] = useState<Tab>('DEFAULT')
-  const [merchantToken, setMerchantToken] = useState<Token>(tokens[0])
-  const [merchantAmount, setMerchantAmount] = useState<number>(0.003)
   const [userToken, setUserToken] = useState<Token>()
   const { setTokenSymbol } = useConversion()
+
+  const merchantToken = tokens[0]
+  const merchantAmount = 0.003
 
   const getAccount = async () => {
     await connectStore.connectWallet()

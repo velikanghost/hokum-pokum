@@ -1,11 +1,9 @@
-'use client'
-
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuList,
 } from '@/components/ui/navigation-menu'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { RiMenu2Line, RiTwitterXLine } from 'react-icons/ri'
 import { MobileSidebar } from './MobileSidebar'
 import { NavigationMenuLink } from '@radix-ui/react-navigation-menu'

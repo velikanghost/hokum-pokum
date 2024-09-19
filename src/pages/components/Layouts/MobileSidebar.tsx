@@ -1,5 +1,5 @@
 import { MenuItem } from '@/lib/types'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   RiArrowDropDownLine,
   RiArrowDropRightLine,
