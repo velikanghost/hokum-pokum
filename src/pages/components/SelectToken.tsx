@@ -49,7 +49,7 @@ export const SelectToken = ({ setActiveTab, setToken }: SelectTokenProps) => {
             }
           >
             <img
-              src={`/src/assets/chains/${chn?.icon}`}
+              src={`/images/chains/${chn?.icon}`}
               alt="token"
               className="network-image"
               width={100}
@@ -70,7 +70,7 @@ export const SelectToken = ({ setActiveTab, setToken }: SelectTokenProps) => {
             onClick={() => selectUserToken(token)}
           >
             <img
-              src={`/src/assets/tokens/${token?.tokenIcon}`}
+              src={`/images/tokens/${token?.tokenIcon}`}
               alt="token"
               className="token-image"
               width={100}

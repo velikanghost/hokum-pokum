@@ -115,7 +115,8 @@
   padding: 8px;
   cursor: pointer;
 }
-.network-options .network.active, .network-options .network:hover {
+.network-options .network.active,
+.network-options .network:hover {
   border: 3px solid #fff;
   background-color: #373943;
   // padding: 8px;
@@ -159,7 +160,7 @@
   color: #a8acc3;
 }
 
-.change-token-btn{
+.change-token-btn {
   padding: 4px;
   margin-bottom: 4px;
   font-size: 12px;
@@ -192,11 +193,11 @@
 }
 @keyframes rotateLoading {
   0% {
-      transform: rotate(0deg);
+    transform: rotate(0deg);
   }
 
   100% {
-      transform: rotate(360deg);
+    transform: rotate(360deg);
   }
 }
 @media screen and (max-width: 800px) {
