@@ -358,14 +358,21 @@ export class ConnectStore {
     }
   }
 
-  getPrice = async () => {
+  getPrice = async (token: string) => {
     try {
-      const response = await axios.get(
-        `https://api.etherscan.io/api?module=stats&action=ethprice&apikey=${this.ETHERSCAN_API_KEY}`,
-      )
-      this.setEthPrice(response.data?.result?.ethusd)
+      this.setLoading(true)
+      if (token === 'eth') {
+        const response = await axios.get(
+          `https://api.etherscan.io/api?module=stats&action=ethprice&apikey=${this.ETHERSCAN_API_KEY}`,
+        )
+        this.setEthPrice(response.data?.result?.ethusd)
+      } else {
+        this.setEthPrice(0.99888)
+      }
+      this.setLoading(false)
     } catch (error) {
       console.error(error)
+      this.setLoading(false)
     }
   }
 

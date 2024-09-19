@@ -1,6 +1,9 @@
 import { Tab } from './CheckoutComponent'
 import { Token } from '@/lib/types'
 import { Button } from '@/components/ui/button'
+import { toJS } from 'mobx'
+import { useContext } from 'react'
+import { StoreContext } from '@/mobx store/RootStore'
 
 interface Props {
   network: string
@@ -29,22 +32,51 @@ export const TokenSwapCard = ({
   setActiveTab,
   price,
 }: Props) => {
+  const getConversion = (amountInUsd: number, token: string): number => {
+    let converted
+
+    switch (token) {
+      case 'eth':
+        converted = amountInUsd / price
+        break
+      case 'weth':
+        converted = amountInUsd / price
+        break
+      case 'usdt':
+        converted = amountInUsd
+        break
+      default:
+        converted = amountInUsd
+        break
+    }
+    return Number(converted.toFixed(3))
+  }
+
   return (
     <div className="token-swap-card my-3">
       {isPayCard && <h4>You pay</h4>}
       <div className="swap-area pb-3">
-        <span className="token-swap__amount">{amount}</span>
+        {isPayCard ? (
+          <span className="token-swap__amount">
+            {getConversion(amount, token.symbol.toLowerCase())}
+          </span>
+        ) : (
+          <span className="token-swap__amount">
+            {getConversion(amount, token.symbol.toLowerCase())}
+          </span>
+        )}
+
         <div className="token-swap__details">
           <div className="token-image-details">
             <img
-              src={`/src/assets/tokens/${token?.tokenIcon}`}
+              src={`/images/tokens/${token?.tokenIcon}`}
               alt="token"
               className="token-image"
               width={40}
               height={40}
             />
             <img
-              src={`/src/assets/chains/${token?.chainIcon}`}
+              src={`/images/chains/${token?.chainIcon}`}
               alt="token"
               className="network-image"
               width={20}
@@ -53,14 +85,17 @@ export const TokenSwapCard = ({
           </div>
           <div className="token-name-details">
             <div className="token-name">{token.name}</div>
-            <div className="network-name">on {network}</div>
+            <div className="network-name">
+              on <span style={{ textTransform: 'capitalize' }}>{network}</span>
+            </div>
           </div>
         </div>
       </div>
       <div className="fiat-area flex justify-between items-center pt-3">
-        <span>
-          ${(0.003 * price).toFixed(2)} Ethereum on {network}
-        </span>
+        <p>
+          ${getConversion(amount, 'usdt')} on{' '}
+          <span style={{ textTransform: 'capitalize' }}>{network}</span>
+        </p>
         {isPayCard && (
           <Button
             className="btn-secondary p-0 change-token-btn"
@@ -110,7 +145,7 @@ export const WalletAddressCard = ({
             </span>
             <div className="token-image-details">
               <img
-                src={`/src/assets/chains/${token?.chainIcon}`}
+                src={`/images/chains/${token?.chainIcon}`}
                 alt="token"
                 className="network-image"
                 width={20}

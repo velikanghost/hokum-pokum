@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState } from 'react'
-import logoImg from '@/assets/logo.jpg'
 import { Button } from '@/components/ui/button'
 import {
   RiCheckDoubleFill,
@@ -23,14 +22,19 @@ import { observer } from 'mobx-react-lite'
 export type Tab = 'DEFAULT' | 'SELECT_TOKEN'
 
 const CheckoutComponent = () => {
+  const params = new URLSearchParams(window.location.search)
   const { connectStore } = useContext(StoreContext)
   const [acct, setAcct] = useState<JsonRpcSigner>()
   const [activeTab, setActiveTab] = useState<Tab>('DEFAULT')
   const [userToken, setUserToken] = useState<Token>()
+  const [merchantToken, setMerChantToken] = useState<Token>(tokens[0])
+  const [merchantAmount, setMerchantAmount] = useState<number>(0.003)
+  const [chain, setChain] = useState<string>('Arbitrum Sepolia')
   const { setTokenSymbol } = useConversion()
 
-  const merchantToken = tokens[0]
-  const merchantAmount = 0.003
+  const waveAmount = params?.get('wa')
+  const waveToken = params?.get('wt')
+  const waveChain = params?.get('wc')
 
   const getAccount = async () => {
     await connectStore.connectWallet()
@@ -38,9 +42,39 @@ const CheckoutComponent = () => {
     setAcct(account as any)
   }
 
+  const getNetworkName = (name: string): string | undefined => {
+    const networkNames: { [key: string]: string } = {
+      eth: 'Ethereum',
+      usdc: 'USDC',
+      usdt: 'USDT',
+    }
+    return networkNames[name] || undefined
+  }
+
   useEffect(() => {
-    connectStore.getPrice()
+    const fetch = async () => {
+      await connectStore.getPrice(waveToken!)
+    }
+    fetch()
   }, [])
+
+  useEffect(() => {
+    if (waveToken && waveAmount && waveChain) {
+      const token: Token = {
+        symbol: waveToken,
+        name: getNetworkName(waveToken) as string,
+        chainIcon: waveChain.slice(0, 3) + '.svg',
+        tokenIcon: waveToken + '.svg',
+      }
+
+      const chain = waveChain.split('_')
+      const amount = waveAmount.split('_')[0]
+
+      setMerChantToken(token)
+      setChain(`${chain[0]} ${chain[1]}`)
+      setMerchantAmount(Number(amount))
+    }
+  }, [connectStore.ethPrice])
 
   const beginTransfer = async () => {
     await connectStore.bridgeToken('BaseSepolia', 'ArbitrumSepolia')
@@ -59,7 +93,7 @@ const CheckoutComponent = () => {
     >
       <div className="checkout-header font-headings">
         <img
-          src={logoImg}
+          src="/images/logo.jpg"
           className="logo"
           width={100}
           height={100}
@@ -76,7 +110,7 @@ const CheckoutComponent = () => {
           <>
             <div className="checkout-card__body">
               <TokenSwapCard
-                network={'Arbitrum Sepolia'}
+                network={chain}
                 token={merchantToken}
                 amount={merchantAmount}
                 price={connectStore.ethPrice}
