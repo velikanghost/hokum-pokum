@@ -43,6 +43,9 @@ export class ConnectStore {
     icon: '',
   }
   ethPrice: number = 0
+  defaultPrice: number = 0
+  defaultMerchantToken: string = ''
+  defaultMerchantPrice: string = ''
   INFURA_API_KEY = import.meta.env.VITE_INFURA_API_KEY
   ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY
   ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY
@@ -361,13 +364,31 @@ export class ConnectStore {
   getPrice = async (token: string) => {
     try {
       this.setLoading(true)
-      if (token === 'eth') {
+      if (token === 'eth' || token === 'weth') {
         const response = await axios.get(
           `https://api.etherscan.io/api?module=stats&action=ethprice&apikey=${this.ETHERSCAN_API_KEY}`,
         )
         this.setEthPrice(response.data?.result?.ethusd)
       } else {
         this.setEthPrice(0.99888)
+      }
+      this.setLoading(false)
+    } catch (error) {
+      console.error(error)
+      this.setLoading(false)
+    }
+  }
+
+  getDefaultPrice = async (token: string) => {
+    try {
+      this.setLoading(true)
+      if (token === 'eth' || token === 'weth') {
+        const response = await axios.get(
+          `https://api.etherscan.io/api?module=stats&action=ethprice&apikey=${this.ETHERSCAN_API_KEY}`,
+        )
+        this.setDefaultPrice(response.data?.result?.ethusd)
+      } else {
+        this.setDefaultPrice(0.99888)
       }
       this.setLoading(false)
     } catch (error) {
@@ -410,5 +431,17 @@ export class ConnectStore {
 
   setEthPrice = (price: number) => {
     this.ethPrice = price
+  }
+
+  setDefaultPrice = (price: number) => {
+    this.defaultPrice = price
+  }
+
+  setDefaultMerchantToken = (symbol: string) => {
+    this.defaultMerchantToken = symbol
+  }
+
+  setDefaultMerchantPrice = (amount: string) => {
+    this.defaultMerchantPrice = amount
   }
 }
