@@ -13,7 +13,7 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
-    path: '/r',
+    path: '/redeem',
     element: <Redeem />,
     errorElement: <ErrorPage />,
   },
