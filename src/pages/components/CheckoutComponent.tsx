@@ -13,7 +13,6 @@ import {
 import { SelectToken } from './SelectToken'
 import { Token } from '@/lib/types'
 import { tokens } from '@/lib/data'
-import { useConversion } from '@/hooks/useConversion'
 import { LoadingIcon } from './Icons/LoadingIcon'
 import { JsonRpcSigner } from 'ethers'
 import { StoreContext } from '@/mobx store/RootStore'
@@ -30,7 +29,6 @@ const CheckoutComponent = () => {
   const [merchantToken, setMerChantToken] = useState<Token>(tokens[0])
   const [merchantAmount, setMerchantAmount] = useState<number>(0.003)
   const [chain, setChain] = useState<string>('Arbitrum Sepolia')
-  const { setTokenSymbol } = useConversion()
 
   const waveAmount = params?.get('wa')
   const waveToken = params?.get('wt')
@@ -52,18 +50,31 @@ const CheckoutComponent = () => {
   }
 
   useEffect(() => {
+    connectStore.setDefaultMerchantToken(waveToken!)
+    const fetchInitialPrice = async () => {
+      await connectStore.getDefaultPrice(waveToken!)
+    }
+
+    fetchInitialPrice()
+  }, [])
+
+  useEffect(() => {
     const fetch = async () => {
-      await connectStore.getPrice(waveToken!)
+      await connectStore.getPrice(
+        connectStore.selectedToken.symbol.toLowerCase() || waveToken!,
+      )
     }
     fetch()
-  }, [])
+  }, [connectStore.selectedToken.symbol])
 
   useEffect(() => {
     if (waveToken && waveAmount && waveChain) {
       const token: Token = {
         symbol: waveToken,
         name: getNetworkName(waveToken) as string,
-        chainIcon: waveChain.slice(0, 3) + '.svg',
+        chainIcon: waveChain.includes('base')
+          ? waveChain.slice(0, 4).trimEnd() + '.svg'
+          : waveChain.slice(0, 3).trimEnd() + '.svg',
         tokenIcon: waveToken + '.svg',
       }
 
@@ -71,7 +82,7 @@ const CheckoutComponent = () => {
       const amount = waveAmount.split('_')[0]
 
       setMerChantToken(token)
-      setChain(`${chain[0]} ${chain[1]}`)
+      setChain(`${chain[0]} ${chain[1] || ' '}`)
       setMerchantAmount(Number(amount))
     }
   }, [connectStore.ethPrice])
@@ -79,12 +90,6 @@ const CheckoutComponent = () => {
   const beginTransfer = async () => {
     await connectStore.bridgeToken('BaseSepolia', 'ArbitrumSepolia')
   }
-
-  useEffect(() => {
-    if (userToken) {
-      setTokenSymbol(merchantToken.symbol)
-    }
-  }, [merchantToken.symbol, setTokenSymbol, userToken?.name])
 
   return (
     <div
@@ -164,7 +169,11 @@ const CheckoutComponent = () => {
           </>
         )}
         {activeTab === 'SELECT_TOKEN' && (
-          <SelectToken setActiveTab={setActiveTab} setToken={setUserToken} />
+          <SelectToken
+            setActiveTab={setActiveTab}
+            setToken={setUserToken}
+            amount={merchantAmount}
+          />
         )}
       </div>
       {connectStore.isAwaitingVAA && (

@@ -9,15 +9,46 @@ import { StoreContext } from '@/mobx store/RootStore'
 interface SelectTokenProps {
   setActiveTab: (value: Tab) => void
   setToken?: (value: Token) => void
+  amount: number
 }
 
-export const SelectToken = ({ setActiveTab, setToken }: SelectTokenProps) => {
+export const SelectToken = ({
+  setActiveTab,
+  setToken,
+  amount,
+}: SelectTokenProps) => {
   const { connectStore } = useContext(StoreContext)
   const [tokens, setTokens] = useState<Token[]>()
+
+  const getConversion = (amountInUsd: number, token: string): number => {
+    let converted
+
+    switch (token) {
+      case 'eth':
+        converted = amountInUsd / connectStore.ethPrice
+        break
+      case 'weth':
+        converted = amountInUsd / connectStore.ethPrice
+        break
+      case 'usdt':
+        converted = amountInUsd
+        break
+      default:
+        converted = amountInUsd
+        break
+    }
+    //console.log(converted)
+    return Number(converted.toFixed(3))
+  }
+
+  // useEffect(() => {
+  //   getConversion(amount, 'eth')
+  // }, [])
 
   const selectUserToken = (token: Token) => {
     if (setToken) setToken(token)
     connectStore.setSelectedToken(token)
+    getConversion(amount, token.symbol.toLowerCase())
     setActiveTab('DEFAULT')
   }
 

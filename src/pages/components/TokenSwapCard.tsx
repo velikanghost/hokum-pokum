@@ -1,6 +1,8 @@
 import { Tab } from './CheckoutComponent'
 import { Token } from '@/lib/types'
 import { Button } from '@/components/ui/button'
+import { useContext } from 'react'
+import { StoreContext } from '@/mobx store/RootStore'
 
 interface Props {
   network: string
@@ -29,15 +31,20 @@ export const TokenSwapCard = ({
   setActiveTab,
   price,
 }: Props) => {
-  const getConversion = (amountInUsd: number, token: string): number => {
+  const { connectStore } = useContext(StoreContext)
+  const getConversion = (
+    amountInUsd: number,
+    token: string,
+    p: number,
+  ): number => {
     let converted
 
     switch (token) {
       case 'eth':
-        converted = amountInUsd / price
+        converted = amountInUsd / p
         break
       case 'weth':
-        converted = amountInUsd / price
+        converted = amountInUsd / p
         break
       case 'usdt':
         converted = amountInUsd
@@ -46,22 +53,22 @@ export const TokenSwapCard = ({
         converted = amountInUsd
         break
     }
-    return Number(converted.toFixed(3))
+    return Number(converted.toFixed(4))
   }
+
+  const conversionValue = !isPayCard
+    ? getConversion(
+        amount,
+        connectStore.defaultMerchantToken,
+        +connectStore.defaultPrice,
+      )
+    : getConversion(amount, token.symbol.toLowerCase(), price)
 
   return (
     <div className="token-swap-card my-3">
       {isPayCard && <h4>You pay</h4>}
       <div className="swap-area pb-3">
-        {isPayCard ? (
-          <span className="token-swap__amount">
-            {getConversion(amount, token.symbol.toLowerCase())}
-          </span>
-        ) : (
-          <span className="token-swap__amount">
-            {getConversion(amount, token.symbol.toLowerCase())}
-          </span>
-        )}
+        <span className="token-swap__amount">{conversionValue || '--'}</span>
 
         <div className="token-swap__details">
           <div className="token-image-details">
@@ -90,7 +97,7 @@ export const TokenSwapCard = ({
       </div>
       <div className="fiat-area flex justify-between items-center pt-3">
         <p>
-          ${getConversion(amount, 'usdt')} on{' '}
+          ${getConversion(amount, 'usdt', price)} on{' '}
           <span style={{ textTransform: 'capitalize' }}>{network}</span>
         </p>
         {isPayCard && (
