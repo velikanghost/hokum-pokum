@@ -1,10 +1,11 @@
-import { useContext, useState } from 'react'
+import { useContext, useEffect } from 'react'
 import { Tab } from './CheckoutComponent'
 import { BiLeftArrowAlt, BiSearchAlt } from 'react-icons/bi'
 import { Token } from '@/lib/types'
 import { Chain } from '@/lib/types/chain'
 import { chains } from '@/lib/data/chains'
 import { StoreContext } from '@/mobx store/RootStore'
+import { observer } from 'mobx-react-lite'
 
 interface SelectTokenProps {
   setActiveTab: (value: Tab) => void
@@ -12,13 +13,9 @@ interface SelectTokenProps {
   amount: number
 }
 
-export const SelectToken = ({
-  setActiveTab,
-  setToken,
-  amount,
-}: SelectTokenProps) => {
+const SelectToken = ({ setActiveTab, setToken, amount }: SelectTokenProps) => {
   const { connectStore } = useContext(StoreContext)
-  const [tokens, setTokens] = useState<Token[]>()
+  const { userTokensInWallet, userEvmAddress } = connectStore
 
   const getConversion = (amountInUsd: number, token: string): number => {
     let converted
@@ -37,29 +34,29 @@ export const SelectToken = ({
         converted = amountInUsd
         break
     }
-    //console.log(converted)
+
     return Number(converted.toFixed(3))
   }
 
-  // useEffect(() => {
-  //   getConversion(amount, 'eth')
-  // }, [])
+  useEffect(() => {
+    connectStore.setSelectedChain(chains[0])
+  }, [])
 
   const selectUserToken = (token: Token) => {
     if (setToken) setToken(token)
-    connectStore.setSelectedToken(token)
+    connectStore.setSelectedToken(token as any)
     getConversion(amount, token.symbol.toLowerCase())
     setActiveTab('DEFAULT')
   }
 
   const handleChainSelect = (chn: Chain) => {
     connectStore.setSelectedChain(chn)
-    setTokens(chn.tokens)
+    connectStore.getUserTokensInWallet(userEvmAddress, chn.title)
   }
 
   return (
     <>
-      <div className="pay-with-header mt-3 mb-4">
+      <div className="mt-3 mb-4 pay-with-header">
         <BiLeftArrowAlt
           size={30}
           className="mr-auto"
@@ -68,7 +65,7 @@ export const SelectToken = ({
         />
         <span className="mr-auto text-muted">Pay with</span>
       </div>
-      <div className="network-options mb-4">
+      <div className="mb-4 network-options">
         {chains.map((chn, i) => (
           <div
             key={i}
@@ -93,15 +90,15 @@ export const SelectToken = ({
         <input type="text" placeholder="Enter token name or address" />
         <BiSearchAlt size={30} />
       </div>
-      <div className="tokens-list mt-8">
-        {tokens?.map((token, i) => (
+      <div className="mt-8 tokens-list">
+        {userTokensInWallet?.map((token, i) => (
           <div
             className="token-details"
             key={i}
             onClick={() => selectUserToken(token)}
           >
             <img
-              src={`/images/tokens/${token?.tokenIcon}`}
+              src={`/images/tokens/${token}`}
               alt="token"
               className="token-image"
               width={100}
@@ -117,3 +114,5 @@ export const SelectToken = ({
     </>
   )
 }
+
+export default observer(SelectToken)

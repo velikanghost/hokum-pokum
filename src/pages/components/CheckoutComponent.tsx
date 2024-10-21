@@ -5,24 +5,22 @@ import {
   RiLogoutBoxFill,
   RiWallet2Fill,
 } from 'react-icons/ri'
-import {
-  SelectTokenChainCard,
-  TokenSwapCard,
-  WalletAddressCard,
-} from '../components/TokenSwapCard'
-import { SelectToken } from './SelectToken'
+import SelectToken from './SelectToken'
 import { Token } from '@/lib/types'
 import { tokens } from '@/lib/data'
 import { LoadingIcon } from './Icons/LoadingIcon'
 import { JsonRpcSigner } from 'ethers'
 import { StoreContext } from '@/mobx store/RootStore'
 import { observer } from 'mobx-react-lite'
+import { Chain } from '@wormhole-foundation/sdk'
+import { toJS } from 'mobx'
 
 export type Tab = 'DEFAULT' | 'SELECT_TOKEN'
 
 const CheckoutComponent = () => {
   const params = new URLSearchParams(window.location.search)
   const { connectStore } = useContext(StoreContext)
+  const { userSolanaAddress, userSolanaWallet } = connectStore
   const [acct, setAcct] = useState<JsonRpcSigner>()
   const [activeTab, setActiveTab] = useState<Tab>('DEFAULT')
   const [userToken, setUserToken] = useState<Token>()
@@ -36,9 +34,16 @@ const CheckoutComponent = () => {
 
   const getAccount = async () => {
     await connectStore.connectWallet()
-    const { account } = connectStore
-    setAcct(account as any)
+    const { userEvmAccount } = connectStore
+    setAcct(userEvmAccount as any)
   }
+
+  const getSolanaAccount = async () => {
+    await connectStore.connectSolanaWallet()
+  }
+
+  console.log(toJS(userSolanaAddress))
+  console.log(toJS(userSolanaWallet))
 
   const getNetworkName = (name: string): string | undefined => {
     const networkNames: { [key: string]: string } = {
@@ -48,15 +53,6 @@ const CheckoutComponent = () => {
     }
     return networkNames[name] || undefined
   }
-
-  useEffect(() => {
-    connectStore.setDefaultMerchantToken(waveToken!)
-    const fetchInitialPrice = async () => {
-      await connectStore.getDefaultPrice(waveToken!)
-    }
-
-    fetchInitialPrice()
-  }, [])
 
   useEffect(() => {
     const fetch = async () => {
@@ -88,12 +84,23 @@ const CheckoutComponent = () => {
   }, [connectStore.ethPrice])
 
   const beginTransfer = async () => {
-    await connectStore.bridgeToken('BaseSepolia', 'ArbitrumSepolia')
+    const chainFrom = connectStore.selectedChain.title.replace(/\s+/g, '')
+    const chainTo = chain
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join('')
+    await connectStore.bridgeViaRouter(
+      'Avalanche',
+      'OptimismSepolia',
+      'native',
+      merchantAmount.toString(),
+    )
+    //await connectStore.bridgeToken('Solana', 'ArbitrumSepolia')
   }
 
   return (
     <div
-      className="flex-1 checkout-container text-secondary flex flex-col justify-center items-center lg:items-start"
+      className="flex flex-col items-center justify-center flex-1 checkout-container text-secondary lg:items-start"
       style={{ position: 'relative' }}
     >
       <div className="checkout-header font-headings">
@@ -114,29 +121,6 @@ const CheckoutComponent = () => {
         {activeTab === 'DEFAULT' && (
           <>
             <div className="checkout-card__body">
-              <TokenSwapCard
-                network={chain}
-                token={merchantToken}
-                amount={merchantAmount}
-                price={connectStore.ethPrice}
-              />
-              {userToken ? (
-                <TokenSwapCard
-                  network={connectStore.selectedChain.title}
-                  token={connectStore.selectedToken}
-                  amount={Number(merchantAmount)}
-                  price={connectStore.ethPrice}
-                  setActiveTab={setActiveTab}
-                  isPayCard
-                />
-              ) : (
-                <SelectTokenChainCard setActiveTab={setActiveTab} />
-              )}
-              <WalletAddressCard
-                account={acct}
-                network={'Arb Sepolia'}
-                token={merchantToken || tokens[0]}
-              />
               <Button
                 variant="nav"
                 className={`btn-primary w-full `}
@@ -163,6 +147,31 @@ const CheckoutComponent = () => {
                     )}
                   </>
                 )}
+              </Button>
+
+              {/* for solana */}
+              <Button
+                variant="nav"
+                className={`btn-primary w-full mt-4`}
+                onClick={() =>
+                  userSolanaWallet ? beginTransfer() : getSolanaAccount()
+                }
+              >
+                <>
+                  {userToken ? (
+                    <span className="mr-3">Checkout</span>
+                  ) : (
+                    <span className="mr-3">
+                      {(userSolanaAddress && userSolanaAddress) ||
+                        'Connect Solana'}
+                    </span>
+                  )}
+                  {acct && !userToken ? (
+                    <RiLogoutBoxFill size={18} />
+                  ) : (
+                    <RiWallet2Fill size={18} />
+                  )}
+                </>
               </Button>
             </div>
             <div className="checkout-card__footer"></div>

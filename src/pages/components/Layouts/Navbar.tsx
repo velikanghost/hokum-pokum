@@ -11,8 +11,10 @@ import { Button } from '@/components/ui/button'
 import { BsJournalText } from 'react-icons/bs'
 import { BiHomeSmile } from 'react-icons/bi'
 import { MdRedeem } from 'react-icons/md'
+import { useNavigate } from 'react-router-dom'
 
 const Navbar = () => {
+  const navigate = useNavigate()
   const [showSidebar, setShowSidebar] = useState<boolean>(false)
   const menuItems = [
     {
@@ -20,11 +22,11 @@ const Navbar = () => {
       name: 'Home',
       link: '/',
     },
-    {
-      icon: <MdRedeem size={18} />,
-      name: 'Redeem',
-      link: '/redeem',
-    },
+    // {
+    //   icon: <MdRedeem size={18} />,
+    //   name: 'Redeem',
+    //   link: '/redeem',
+    // },
     {
       icon: <RiTwitterXLine size={18} />,
       name: 'Twitter/X',
@@ -67,8 +69,12 @@ const Navbar = () => {
                 {item.icon} {item.name}
               </NavigationMenuLink>
             ))}
-            <Button variant="nav" className="btn-primary hover:animate-pulse">
-              Stay In Touch
+            <Button
+              variant="nav"
+              className="btn-primary hover:animate-pulse"
+              onClick={() => navigate('/transfer')}
+            >
+              Launch App
             </Button>
           </div>
         </NavigationMenuList>

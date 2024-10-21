@@ -4,25 +4,21 @@ export const tokens: Token[] = [
   {
     name: 'Ethereum',
     symbol: 'ETH',
-    tokenIcon: 'eth.svg',
-    chainIcon: 'arb.svg',
+    address: '',
   },
   {
     name: 'USDT',
-    symbol: 'ETH',
-    tokenIcon: 'usdt.svg',
-    chainIcon: 'base.svg',
+    symbol: 'USDT',
+    address: '',
   },
   {
     name: 'USDC',
-    symbol: 'ETH',
-    tokenIcon: 'jst.svg',
-    chainIcon: 'https://www.flaticon.com/free-icons/arbitrum',
+    symbol: 'USDC',
+    address: '',
   },
   {
     name: 'WETH',
     symbol: 'ETH',
-    tokenIcon: 'jst.svg',
-    chainIcon: 'https://www.flaticon.com/free-icons/arbitrum',
+    address: '',
   },
 ]
