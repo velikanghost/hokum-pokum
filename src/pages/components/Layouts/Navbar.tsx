@@ -9,22 +9,12 @@ import { MobileSidebar } from './MobileSidebar'
 import { NavigationMenuLink } from '@radix-ui/react-navigation-menu'
 import { Button } from '@/components/ui/button'
 import { BsJournalText } from 'react-icons/bs'
-import { BiHomeSmile } from 'react-icons/bi'
-import { MdRedeem } from 'react-icons/md'
+import { useNavigate } from 'react-router-dom'
 
 const Navbar = () => {
+  const navigate = useNavigate()
   const [showSidebar, setShowSidebar] = useState<boolean>(false)
   const menuItems = [
-    {
-      icon: <BiHomeSmile size={20} />,
-      name: 'Home',
-      link: '/',
-    },
-    {
-      icon: <MdRedeem size={18} />,
-      name: 'Redeem',
-      link: '/redeem',
-    },
     {
       icon: <RiTwitterXLine size={18} />,
       name: 'Twitter/X',
@@ -41,7 +31,10 @@ const Navbar = () => {
     <>
       <NavigationMenu className="mx-auto navigation-menu">
         <NavigationMenuList className="container items-center justify-between w-screen pt-2 nav-container">
-          <NavigationMenuItem className="py-4 text-2xl font-semibold text-primary-foreground font-headings">
+          <NavigationMenuItem
+            className="py-4 text-2xl font-semibold cursor-pointer text-primary-foreground font-headings"
+            onClick={() => navigate('/')}
+          >
             Heekowave
           </NavigationMenuItem>
 
@@ -51,8 +44,6 @@ const Navbar = () => {
               onClick={() => setShowSidebar(true)}
             >
               {showSidebar ? null : <RiMenu2Line size={30} color="#EBE8E2" />}
-
-              {/* <FaBear /> */}
             </button>
           </NavigationMenuItem>
 
@@ -67,8 +58,12 @@ const Navbar = () => {
                 {item.icon} {item.name}
               </NavigationMenuLink>
             ))}
-            <Button variant="nav" className="btn-primary hover:animate-pulse">
-              Stay In Touch
+            <Button
+              variant="nav"
+              className="btn-primary hover:animate-pulse"
+              onClick={() => navigate('/demo')}
+            >
+              Try Demo
             </Button>
           </div>
         </NavigationMenuList>

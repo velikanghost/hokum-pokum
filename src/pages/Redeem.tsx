@@ -18,7 +18,7 @@ const Redeem = () => {
   }, [])
 
   const redeemAndFinalize = async () => {
-    await connectStore.redeemAndFinalize(recoverTxid, 'Sepolia')
+    await connectStore.redeemAndFinalize(recoverTxid, 'ArbitrumSepolia')
   }
   return (
     <>

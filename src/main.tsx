@@ -4,7 +4,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import './index.scss'
 import Home from './pages/Home.tsx'
 import ErrorPage from './error-page.tsx'
-import Redeem from './pages/Redeem.tsx'
+import Transfer from './pages/Transfer.tsx'
+import Merchant from './pages/Merchant.tsx'
 
 const router = createBrowserRouter([
   {
@@ -12,9 +13,19 @@ const router = createBrowserRouter([
     element: <Home />,
     errorElement: <ErrorPage />,
   },
+  // {
+  //   path: '/redeem',
+  //   element: <Redeem />,
+  //   errorElement: <ErrorPage />,
+  // },
   {
-    path: '/redeem',
-    element: <Redeem />,
+    path: '/demo',
+    element: <Transfer />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: '/merchant',
+    element: <Merchant />,
     errorElement: <ErrorPage />,
   },
 ])

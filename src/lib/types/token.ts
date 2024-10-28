@@ -1,6 +1,9 @@
 export interface Token {
   symbol: string
   name: string
-  tokenIcon: string
-  chainIcon: string
+  address: string
+  iconUrl?: string
+  balance?: string
+  decimals?: string
+  type?: string
 }
