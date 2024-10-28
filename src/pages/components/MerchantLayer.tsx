@@ -14,12 +14,6 @@ const MerchantLayer = ({ network, token, amount }: Props) => {
 
   useEffect(() => {
     connectStore.setDefaultMerchantToken(token.symbol.toLowerCase())
-    const fetchInitialPrice = async () => {
-      await connectStore.getPrice(token.symbol.toLowerCase())
-      const { ethPrice } = connectStore
-      setMerchantPrice(ethPrice)
-    }
-    fetchInitialPrice()
   }, [token])
 
   const getConversion = (
@@ -60,14 +54,14 @@ const MerchantLayer = ({ network, token, amount }: Props) => {
         <div className="token-swap__details">
           <div className="token-image-details">
             <img
-              src={`/images/tokens/${token}`}
+              src={`/images/tokens/${token.symbol.toLowerCase()}.svg`}
               alt="token"
               className="token-image"
               width={40}
               height={40}
             />
             <img
-              src={`/images/chains/${token}`}
+              src={`/images/chains/${network.split(' ')[0].toLowerCase()}.svg`}
               alt="token"
               className="network-image"
               width={20}

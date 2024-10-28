@@ -4,5 +4,6 @@ export interface Token {
   address: string
   iconUrl?: string
   balance?: string
+  decimals?: string
   type?: string
 }

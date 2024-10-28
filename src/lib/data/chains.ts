@@ -1,3 +1,4 @@
+//Testnet
 export const chains = [
   {
     title: 'Sepolia',
@@ -12,6 +13,35 @@ export const chains = [
   {
     title: 'Optimism Sepolia',
     explorer: 'https://sepolia-optimism.etherscan.io',
-    icon: 'opt.svg',
+    icon: 'optimism.svg',
+  },
+  {
+    title: 'Avalanche',
+    explorer: 'https://sepolia-optimism.etherscan.io',
+    icon: 'avalanche.svg',
+  },
+]
+
+//Mainnet
+export const chainss = [
+  {
+    title: 'Ethereum',
+    explorer: 'https://sepolia.etherscan.io',
+    icon: 'eth.svg',
+  },
+  {
+    title: 'Base',
+    explorer: 'https://base-sepolia.blockscout.com',
+    icon: 'base.svg',
+  },
+  {
+    title: 'Optimism',
+    explorer: 'https://sepolia-optimism.etherscan.io',
+    icon: 'optimism.svg',
+  },
+  {
+    title: 'Avalanche',
+    explorer: 'https://sepolia-optimism.etherscan.io',
+    icon: 'avalanche.svg',
   },
 ]

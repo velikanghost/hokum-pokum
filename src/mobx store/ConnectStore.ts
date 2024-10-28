@@ -5,7 +5,6 @@ import {
   wormhole,
   signSendWait,
   Wormhole,
-  amount,
   Chain,
   routes,
   canonicalAddress,
@@ -24,12 +23,6 @@ import { Chain as ChainType } from '@/lib/types/chain'
 import { Token } from '@/lib/types'
 import axios from 'axios'
 import { Connection } from '@solana/web3.js'
-import { Buffer } from 'buffer'
-
-// Ensure Buffer is available globally
-if (!window.Buffer) {
-  window.Buffer = Buffer
-}
 
 type Account = {
   address: string
@@ -59,8 +52,16 @@ export class ConnectStore {
     explorer: '',
     icon: '',
   }
+  transferAmount: string = ''
   availableSourceTokens: Token[] = []
   userTokensInWallet: Token[] = []
+  availableDestinationTokens: string[] = []
+  availableRoutes: any[] = []
+  bestRouteQuote: any = {}
+  initiateReceipt: any = {}
+  finalReceipt: any = {}
+  bridgeComplete: boolean = false
+  transactionHash: string = ''
   ethPrice: number = 0
   defaultPrice: number = 0
   defaultMerchantToken: string = ''
@@ -69,6 +70,62 @@ export class ConnectStore {
   ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY
   ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY
   solanaConnection = new Connection('https://api.devnet.solana.com')
+
+  chains = {
+    OptimismSepolia: {
+      rpc: `https://optimism-sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    ArbitrumSepolia: {
+      rpc: `https://arbitrum-sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    BaseSepolia: {
+      rpc: `https://base-sepolia.g.alchemy.com/v2/${this.ALCHEMY_API_KEY}`,
+    },
+    Sepolia: {
+      rpc: `https://sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Holesky: {
+      rpc: `https://holesky.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Ethereum: {
+      rpc: `https://mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Optimism: {
+      rpc: `https://optimism-mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Bsc: {
+      rpc: `https://bsc-mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Arbitrum: {
+      rpc: `https://arbitrum-mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Base: {
+      rpc: `https://base-mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Polygon: {
+      rpc: `https://polygon-mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Solana: {
+      rpc: `https://api.devnet.solana.com`,
+    },
+    Celo: {
+      rpc: `https://celo-alfajores.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Avalanche: {
+      rpc: `https://avalanche-fuji.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+  }
+
+  priority = [
+    'MayanRouteSWIFT',
+    'MayanRouteMCTP',
+    'MayanRouteWH',
+    'AutomaticCCTPRoute',
+    'AutomaticTokenBridgeRoute',
+    'AutomaticPorticoRoute',
+    'CCTPRoute',
+    'TokenBridgeRoute',
+  ]
 
   constructor() {
     makeAutoObservable(this)
@@ -132,6 +189,7 @@ export class ConnectStore {
       OptimismSepolia: '0xaa37dc',
       ArbitrumSepolia: '0x66eee',
       Holesky: '0x4268',
+      Avalanche: '0xa869',
     }
     return networkChainIds[networkName] || undefined
   }
@@ -179,166 +237,6 @@ export class ConnectStore {
       }
     } else {
       console.error('MetaMask is not installed')
-    }
-  }
-
-  bridgeToken = async (source: Chain, destination: Chain) => {
-    // // Get the current chain ID
-    // const currentChainId = await window.ethereum.request({
-    //   method: 'eth_chainId',
-    // })
-
-    // const sourceChainId = this.getChainIdByNetworkName(source)
-
-    // // Check if we're not on Sepolia
-    // if (currentChainId !== sourceChainId) {
-    //   console.log(`Not on ${source} , switching...`)
-
-    //   // Attempt to switch to Sepolia
-    //   await window.ethereum.request({
-    //     method: 'wallet_switchEthereumChain',
-    //     params: [{ chainId: sourceChainId }],
-    //   })
-    //   console.log(`Successfully switched to ${source}`)
-    // } else {
-    //   console.log('Already on Sepolia')
-    // }
-
-    this.setIsInitiatingTransfer(true)
-    try {
-      // EXAMPLE_WORMHOLE_INIT
-      const wh = await wormhole('Testnet', [evm, solana], {
-        chains: {
-          OptimismSepolia: {
-            rpc: `https://optimism-sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
-          },
-          ArbitrumSepolia: {
-            rpc: `https://arbitrum-sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
-          },
-          BaseSepolia: {
-            rpc: `https://base-sepolia.g.alchemy.com/v2/${this.ALCHEMY_API_KEY}`,
-          },
-          Sepolia: {
-            rpc: `https://sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
-          },
-          Holesky: {
-            rpc: `https://holesky.infura.io/v3/${this.INFURA_API_KEY}`,
-          },
-          Solana: {
-            rpc: `https://api.devnet.solana.com`,
-          },
-        },
-      })
-      // EXAMPLE_WORMHOLE_INIT
-
-      // Grab a ChainContext object from our configured Wormhole instance
-      const ctx = wh.getChain(source)
-      const rcv = wh.getChain(destination)
-
-      // const sender = new MetaMaskSigner(
-      //   this.account as JsonRpcSigner,
-      //   ctx.chain,
-      //   this.address,
-      // )
-
-      const sender = new SolanaWalletSigner(
-        this.solanaConnection,
-        ctx.chain,
-        this.userSolanaWallet,
-        this.userSolanaAddress,
-      )
-
-      const receiver = new MetaMaskSigner(
-        this.userEvmAccount as JsonRpcSigner,
-        rcv.chain,
-        this.userEvmAddress,
-      )
-
-      // Get a Token Bridge contract client on the source
-      const sndTb = await ctx.getTokenBridge()
-
-      // Send the native token of the source chain
-      const tokenId = Wormhole.tokenId(ctx.chain, 'native')
-
-      // bigint amount using `amount` module
-      const amt = amount.units(
-        amount.parse('0.01', ctx.config.nativeTokenDecimals),
-      )
-
-      const receiverAdd = new EvmAddress(
-        '0x2Cab74bdB5c0Eb9E63a03bc9D448A92A201d7C88',
-      )
-
-      const senderAddress = new SolanaAddress(this.userSolanaAddress)
-
-      const receiverAddress = {
-        chain: destination,
-        address: receiverAdd,
-      }
-      // Create a transaction stream for transfers
-      const transfer = sndTb.transfer(
-        senderAddress,
-        receiverAddress as any,
-        tokenId.address,
-        amt,
-      )
-
-      // Sign and send the transaction
-      const txids = await signSendWait(ctx, transfer, sender)
-
-      console.log('sourceSent: ', txids)
-
-      // Get the wormhole message id from the transaction
-      //const [whm] = await ctx.parseTransaction(txids[txids.length - 1]!.txid)
-      const [whm] = await ctx.parseTransaction(txids[0]!.txid)
-      console.log('Wormhole Messages: ', whm)
-      this.setIsInitiatingTransfer(false)
-
-      this.setIsAwaitingVAA(true)
-      setTimeout(async () => {
-        // EXAMPLE_WORMHOLE_VAA
-        // Get the VAA from the wormhole message id
-        // if (!whm) {
-        //   console.log('wormhole message not found')
-        //   this.setIsAwaitingVAA(false)
-        //   return
-        // }
-        const vaa = await wh.getVaa(
-          // Wormhole Message ID
-          whm! || txids[0].txid,
-          // Protocol:Payload name to use for decoding the VAA payload
-          'TokenBridge:Transfer',
-          // Timeout in milliseconds, depending on the chain and network, the VAA may take some time to be available
-          60_000,
-        )
-        this.setIsAwaitingVAA(false)
-
-        // EXAMPLE_WORMHOLE_VAA
-        this.setLoading(true)
-        // Now get the token bridge on the redeem side
-        const rcvTb = await rcv.getTokenBridge()
-
-        // Create a transaction stream for redeeming
-        const redeem = rcvTb.redeem(receiver.userAddress as any, vaa!)
-        console.log('redeeming: ', redeem)
-
-        // Sign and send the transaction
-        const rcvTxids = await signSendWait(rcv, redeem, receiver)
-        console.log('redeemSent: ', rcvTxids)
-
-        this.setLoading(false)
-
-        // Now check if the transfer is completed according to
-        // the destination token bridge
-        const finished = await rcvTb.isTransferCompleted(vaa!)
-        console.log('Transfer completed: ', finished)
-        this.setIsRedeemCompleted(finished)
-      }, 1200000)
-    } catch (error) {
-      console.error(error)
-      this.setIsInitiatingTransfer(false)
-      this.setIsAwaitingVAA(false)
-      this.setLoading(false)
     }
   }
 
@@ -413,42 +311,43 @@ export class ConnectStore {
     }
   }
 
+  selectRoute(routes: any) {
+    const selectedRoute = this.priority.find((route) => routes.includes(route))
+    return selectedRoute || null
+  }
+
   bridgeViaRouter = async (
     source: Chain,
     destination: Chain,
     selectedToken: string,
     amount: string,
+    destinationAddress: string,
   ) => {
+    this.setLoading(true)
+    console.log({ source, destination, amount })
+    // Get the current chain ID
+    const currentChainId = await window.ethereum.request({
+      method: 'eth_chainId',
+    })
+
+    const sourceChainId = this.getChainIdByNetworkName(source)
+
+    // Check if we're not on Sepolia
+    if (currentChainId !== sourceChainId) {
+      console.log(`Not on ${source} , switching...`)
+
+      // Attempt to switch to Sepolia
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: sourceChainId }],
+      })
+      console.log(`Successfully switched to ${source}`)
+    } else {
+      console.log('Already on required chain')
+    }
+
     const wh = await wormhole('Testnet', [evm, solana], {
-      chains: {
-        OptimismSepolia: {
-          rpc: `https://optimism-sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        ArbitrumSepolia: {
-          rpc: `https://arbitrum-sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        BaseSepolia: {
-          rpc: `https://base-sepolia.g.alchemy.com/v2/${this.ALCHEMY_API_KEY}`,
-        },
-        Sepolia: {
-          rpc: `https://sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        Holesky: {
-          rpc: `https://holesky.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        Solana: {
-          rpc: `https://api.devnet.solana.com`,
-        },
-        Bsc: {
-          rpc: `https://bsc-testnet.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        Celo: {
-          rpc: `https://celo-alfajores.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        Avalanche: {
-          rpc: `https://avalanche-fuji.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-      },
+      chains: this.chains,
     })
 
     // Grab a ChainContext object from our configured Wormhole instance
@@ -488,23 +387,7 @@ export class ConnectStore {
       MayanRouteWH,
     ])
 
-    // What tokens are available on the source chain?
-    const srcTokens = await resolver.supportedSourceTokens(ctx)
-
-    console.log('Allowed source tokens array: ', srcTokens)
-
-    console.log(
-      'Allowed source tokens: ',
-      srcTokens.map((t) => canonicalAddress(t)),
-    )
-
     const sendToken = Wormhole.tokenId(ctx.chain, selectedToken)
-
-    //avax usdc
-    // const sendToken = Wormhole.tokenId(
-    //   ctx.chain,
-    //   '0x5425890298aed601595a70AB815c96711a31Bc65',
-    // )
 
     // Given the send token, what can we possibly get on the destination chain?
     const destTokens = await resolver.supportedDestinationTokens(
@@ -512,57 +395,103 @@ export class ConnectStore {
       ctx,
       rcv,
     )
-    //console.log('Receivable tokens array: ', srcTokens)
-    console.log(
-      'For the given source token and routes configured, the following tokens may be receivable: ',
+
+    this.setAvailableDestinationTokens(
       destTokens.map((t) => canonicalAddress(t)),
     )
-    // Grab the first one for the example
-    const destinationToken = destTokens[0]!
 
-    // Creating a transfer request fetches token details
-    // Since all routes will need to know about the tokens
-    const tr = await routes.RouteTransferRequest.create(wh, {
-      source: sendToken,
-      destination: destinationToken,
-    })
+    //console.log(destTokens.map((t) => canonicalAddress(t)))
 
-    // Resolve the transfer request to a set of routes that can perform it
-    const foundRoutes = await resolver.findRoutes(tr)
-    console.log(
-      'For the transfer parameters, we found these routes: ',
-      foundRoutes,
+    const allFoundRoutesWithTr = await Promise.all(
+      destTokens.map(async (destinationToken) => {
+        const tr = await routes.RouteTransferRequest.create(wh, {
+          source: sendToken,
+          destination: destinationToken,
+        })
+
+        const foundRoutes = await resolver.findRoutes(tr)
+        console.log(
+          `Found routes for destinationToken ${destinationToken}:`,
+          foundRoutes,
+        )
+
+        return foundRoutes.length ? { tr, foundRoutes } : null // Return { tr, foundRoutes } or null if no routes
+      }),
     )
 
-    const bestRoute = foundRoutes[0]!
-    console.log('Selected: ', bestRoute)
-
-    console.log(
-      'This route offers the following default options',
-      bestRoute.getDefaultOptions(),
+    // Filter out null values and flatten foundRoutes into a single-level array
+    const nonEmptyResults = allFoundRoutesWithTr.filter(Boolean)
+    const nonEmptyFoundRoutes = nonEmptyResults.flatMap(
+      (result) => result?.foundRoutes,
     )
+    const transferRequests = nonEmptyResults.map((result) => result?.tr)
 
-    // Specify the amount as a decimal string
-    // const amt = '2'
-    // Create the transfer params for this request
+    console.log('All non-empty found routes:', nonEmptyFoundRoutes)
+    console.log('Associated transfer requests (tr):', transferRequests[0])
+
+    this.setAvailableRoutes(nonEmptyFoundRoutes)
+
     const transferParams = { amount: amount, options: { nativeGas: 0 } }
 
-    // Validate the transfer params passed, this returns a new type of ValidatedTransferParams
-    // which (believe it or not) is a validated version of the input params
-    // This new var must be passed to the next step, quote
-    const validated = await bestRoute.validate(tr, transferParams)
-    if (!validated.valid) throw validated.error
-    console.log('Validated parameters: ', validated.params)
+    // Create an array to store the results
+    const quotesArray: any = []
+    let bestRoute: any
+    let bestQuote: any
+    let firstRoute
 
-    // Get a quote for the transfer, this too returns a new type that must
-    // be passed to the next step, execute (if you like the quote)
-    const quote = await bestRoute.quote(tr, validated.params)
-    if (!quote.success) throw quote.error
-    console.log('Best route quote: ', quote)
+    // Iterate over the arr and make an API request for each token address
+    const requests = nonEmptyFoundRoutes.map(async (route, index) => {
+      try {
+        // Save the first route as a fallback
+        if (index === 0) firstRoute = route
+        // Validate the transfer params passed, this returns a new type of ValidatedTransferParams
+        // which (believe it or not) is a validated version of the input params
+        // This new var must be passed to the next step, quote
+        const validated = await route?.validate(
+          transferRequests[0]!,
+          transferParams,
+        )
+        if (!validated?.valid) throw validated?.error
+        //console.log('Validated parameters: ', validated.params)
 
-    const merchantAddress = new EvmAddress(
-      '0x2Cab74bdB5c0Eb9E63a03bc9D448A92A201d7C88',
-    )
+        // Get a quote for the transfer, this too returns a new type that must
+        // be passed to the next step, execute (if you like the quote)
+        const quote = await route?.quote(transferRequests[0]!, validated.params)
+        if (!quote?.success) throw quote?.error
+
+        //console.log('Best route quote: ', quote)
+        quotesArray.push(quote)
+        // Check if the quote has relayFee
+        if (quote.relayFee) {
+          bestRoute = route
+        }
+      } catch (error) {
+        console.error(`Error :`, error)
+      }
+    })
+
+    // Wait for all requests to complete
+    await Promise.all(requests)
+
+    // After requests, if no bestRoute with relayFee is found, set to the first route
+    if (!bestRoute) {
+      bestRoute = firstRoute
+    }
+
+    console.log('quotesArr: ', quotesArray)
+
+    bestQuote = quotesArray.filter((arr: any) => arr.relayFee)[0]
+
+    if (!bestQuote) {
+      bestQuote = quotesArray[0]
+    }
+
+    console.log('bestRoute: ', bestRoute)
+    console.log('bestQuote: ', bestQuote)
+
+    this.setBestRouteQuote(bestQuote)
+
+    const merchantAddress = new EvmAddress(destinationAddress)
 
     //evm
     const receiverAddress = {
@@ -571,153 +500,272 @@ export class ConnectStore {
     }
 
     // If you're sure you want to do this, set this to true
-    const imSure = false
-    if (imSure) {
+    const imSure = true
+    if (bestRoute && imSure) {
       // Now the transfer may be initiated
       // A receipt will be returned, guess what you gotta do with that?
-      console.log('intiator val: ', { tr, sender, quote, receiverAddress })
-      const receipt = await bestRoute.initiate(
-        tr,
-        sender,
-        quote,
-        receiverAddress,
-      )
-      console.log('Initiated transfer with receipt: ', receipt)
+
+      try {
+        const receipt = await bestRoute.initiate(
+          transferRequests[0],
+          sender,
+          bestQuote,
+          receiverAddress,
+        )
+
+        console.log('Initiated transfer with receipt: ', receipt)
+        this.setInitiateReceipt(receipt)
+      } catch (error) {
+        const hexValue = this.extractHexValue(error)
+        if (hexValue?.match(/0x[0-9a-fA-F]{64}/)) {
+          this.setTransactionHash(hexValue)
+          this.setLoading(false)
+          this.setBridgeComplete(true)
+        } else {
+          console.log('No txid found.')
+          console.log(hexValue)
+          this.setLoading(false)
+          this.setBridgeComplete(false)
+          return
+        }
+      }
 
       // Kick off a wait log, if there is an opportunity to complete, this function will do it
       // See the implementation for how this works
-      await routes.checkAndCompleteTransfer(bestRoute, receipt, receiver)
+      const finalReceipt = await routes.checkAndCompleteTransfer(
+        bestRoute,
+        this.initiateReceipt,
+        receiver,
+      )
+      console.log(finalReceipt)
+      if (finalReceipt) {
+        this.setFinalReceipt(finalReceipt)
+        this.setLoading(false)
+        this.setBridgeComplete(true)
+      }
     } else {
       console.log('Not initiating transfer (set `imSure` to true to do so)')
+      this.setLoading(false)
+      this.setBridgeComplete(false)
     }
   }
 
-  getAvailableSourceTokens = async (selectedChain: ChainType) => {
-    const source = selectedChain.title.replace(/\s+/g, '')
-    const wh = await wormhole('Testnet', [evm, solana], {
-      chains: {
-        OptimismSepolia: {
-          rpc: `https://optimism-sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        ArbitrumSepolia: {
-          rpc: `https://arbitrum-sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        BaseSepolia: {
-          rpc: `https://base-sepolia.g.alchemy.com/v2/${this.ALCHEMY_API_KEY}`,
-        },
-        Sepolia: {
-          rpc: `https://sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        Holesky: {
-          rpc: `https://holesky.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        Solana: {
-          rpc: `https://api.devnet.solana.com`,
-        },
-        Bsc: {
-          rpc: `https://bsc-testnet.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        Celo: {
-          rpc: `https://celo-alfajores.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-        Avalanche: {
-          rpc: `https://avalanche-fuji.infura.io/v3/${this.INFURA_API_KEY}`,
-        },
-      },
-    })
-
-    const ctx = wh.getChain(source as Chain)
-
-    // Create new resolver, passing the set of routes to consider
-    const resolver = wh.resolver([
-      routes.TokenBridgeRoute,
-      routes.AutomaticTokenBridgeRoute,
-      routes.CCTPRoute,
-      routes.AutomaticCCTPRoute,
-      routes.AutomaticPorticoRoute,
-      MayanRouteMCTP,
-      MayanRouteSWIFT,
-      MayanRouteWH,
-    ])
-
-    // What tokens are available on the source chain?
-    const srcTokens = await resolver.supportedSourceTokens(ctx)
-    const arr = srcTokens.map((t) => canonicalAddress(t))
-
-    console.log(
-      'Allowed source tokens: ',
-      srcTokens.map((t) => canonicalAddress(t)),
-    )
-
-    // Create an array to store the results
-    const tokensArray: any = []
-
-    // Iterate over the arr and make an API request for each token address
-    const requests = arr.map(async (tokenAddress) => {
-      try {
-        const response = await fetch(
-          `https://eth-sepolia.blockscout.com/api/v2/tokens/${tokenAddress}`,
-        )
-        if (!response.ok) {
-          throw new Error(`Failed to fetch data for ${tokenAddress}`)
-        }
-        const data = await response.json()
-
-        // Extract the needed values: address, name, and symbol
-        const { address, name, symbol } = data
-
-        // Push the extracted data into the tokensArray
-        tokensArray.push({ address, name, symbol })
-      } catch (error) {
-        console.error(`Error fetching token data for ${tokenAddress}:`, error)
-      }
-    })
-
-    // Wait for all requests to complete
-    await Promise.all(requests)
-
-    // Log or return the tokensArray
-    //console.log('Tokens:', tokensArray)
-
-    this.setAvailableSourceTokens(tokensArray)
+  extractHexValuee = (error: any) => {
+    const hexRegex = /0x[0-9a-fA-F]{64}/
+    const errorMessage = String(error) // Convert error to string safely
+    const match = errorMessage.match(hexRegex)
+    return match ? match[0] : null // Return the matched value or null if not found
   }
+
+  extractHexValue = (error: any) => {
+    const hexRegex = /0x[0-9a-fA-F]{64}/
+
+    // Convert the error to a string safely
+    const errorMessage = String(error)
+
+    // Check if error is an object with a JSON-RPC error format
+    if (error && typeof error === 'object' && error.code && error.message) {
+      // Handle the JSON-RPC error differently
+      console.log('Handling JSON-RPC error:', error.message)
+
+      // You might want to extract data from the payload, if it exists
+      if (error.payload && Array.isArray(error.payload.params)) {
+        const transactionData = error.payload.params[0]
+        if (transactionData) {
+          const chainId = transactionData.chainId
+          const fromAddress = transactionData.from
+          console.log('Chain ID:', chainId)
+          console.log('From Address:', fromAddress)
+        }
+      }
+      return 'JSON-RPC error' // Return or handle specific error info
+    } else if (errorMessage.match(hexRegex)) {
+      // If it's the simple error message, extract the hex value
+      const match = errorMessage.match(hexRegex)
+      return match ? match[0] : null // Return the matched hex value
+    } else {
+      console.log('Unhandled error format:', errorMessage)
+      return null
+    }
+  }
+
+  // getAvailableSourceTokens = async (selectedChain: ChainType) => {
+  //   const source = selectedChain.title.replace(/\s+/g, '')
+  //   const wh = await wormhole('Testnet', [evm, solana], {
+  //     chains: {
+  //       Avalanche: {
+  //         rpc: `https://avalanche-fuji.infura.io/v3/${this.INFURA_API_KEY}`,
+  //       },
+  //     },
+  //   })
+
+  //   const ctx = wh.getChain(source as Chain)
+
+  //   // Create new resolver, passing the set of routes to consider
+  //   const resolver = wh.resolver([
+  //     routes.TokenBridgeRoute,
+  //     routes.AutomaticTokenBridgeRoute,
+  //     routes.CCTPRoute,
+  //     routes.AutomaticCCTPRoute,
+  //     routes.AutomaticPorticoRoute,
+  //     MayanRouteMCTP,
+  //     MayanRouteSWIFT,
+  //     MayanRouteWH,
+  //   ])
+
+  //   // What tokens are available on the source chain?
+  //   const srcTokens = await resolver.supportedSourceTokens(ctx)
+  //   const arr = srcTokens.map((t) => canonicalAddress(t))
+
+  //   console.log(
+  //     'Allowed source tokens: ',
+  //     srcTokens.map((t) => canonicalAddress(t)),
+  //   )
+
+  //   // Create an array to store the results
+  //   const tokensArray: any = []
+
+  //   // Iterate over the arr and make an API request for each token address
+  //   const requests = arr.map(async (tokenAddress) => {
+  //     try {
+  //       const response = await fetch(
+  //         `https://eth-sepolia.blockscout.com/api/v2/tokens/${tokenAddress}`,
+  //       )
+  //       if (!response.ok) {
+  //         throw new Error(`Failed to fetch data for ${tokenAddress}`)
+  //       }
+  //       const data = await response.json()
+
+  //       // Extract the needed values: address, name, and symbol
+  //       const { address, name, symbol } = data
+
+  //       // Push the extracted data into the tokensArray
+  //       tokensArray.push({ address, name, symbol })
+  //     } catch (error) {
+  //       console.error(`Error fetching token data for ${tokenAddress}:`, error)
+  //     }
+  //   })
+
+  //   // Wait for all requests to complete
+  //   await Promise.all(requests)
+
+  //   // Log or return the tokensArray
+  //   //console.log('Tokens:', tokensArray)
+
+  //   this.setAvailableSourceTokens(tokensArray)
+  // }
 
   getUserTokensInWallet = async (publicAddress: string, chain: string) => {
     const tokensArray: Token[] = []
-    const prefix = chain.split(' ')[0].toLowerCase()
-    console.log({ chain, prefix })
-    console.log({ publicAddress })
+    let prefix: string
+    if (chain === 'optimism-sepolia') {
+      prefix = chain.split('-')[0].toLowerCase()
+    } else {
+      prefix = chain.split(' ')[0].toLowerCase()
+    }
 
-    const url = (prefix: string): string => {
+    const urlTest = (prefix: string): string => {
       const networkNames: { [key: string]: string } = {
         base: `https://base-sepolia.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
         sepolia: `https://eth-sepolia.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
         optimism: `https://optimism-sepolia.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
         arbitrum: `https://sepolia-explorer.arbitrum.io/address/${publicAddress}/token-balances`,
+        avalanche: `https://glacier-api.avax.network/v1/chains/43113/addresses/${publicAddress}/balances:listErc20?pageSize=50&filterSpamTokens=true`,
       }
       return networkNames[prefix]
     }
 
+    const nativeUrlTest = (prefix: string): string => {
+      const networkNames: { [key: string]: string } = {
+        base: `https://base-sepolia.blockscout.com/api/v2/addresses/${publicAddress}`,
+        optimism: `https://optimism-sepolia.blockscout.com/api/v2/addresses/${publicAddress}`,
+        arbitrum: `https://arbitrum.blockscout.com/api/v2/addresses/${publicAddress}`,
+        avalanche: `https://glacier-api.avax.network/v1/chains/43113/addresses/${publicAddress}/balances:getNative`,
+        sepolia: `https://eth-sepolia.blockscout.com/api/v2/addresses/${publicAddress}`,
+      }
+      return networkNames[prefix]
+    }
+
+    // const url = (prefix: string): string => {
+    //   const networkNames: { [key: string]: string } = {
+    //     base: `https://base.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
+    //     ethereum: `https://eth.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
+    //     optimism: `https://optimism.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
+    //     arbitrum: `https://sepolia-explorer.arbitrum.io/address/${publicAddress}/token-balances`,
+    //     avalanche: `https://glacier-api.avax.network/v1/chains/43114/addresses/${publicAddress}/balances:listErc20?pageSize=50&filterSpamTokens=true`,
+    //     avax: `https://glacier-api.avax.network/v1/chains/43114/addresses/${publicAddress}/balances:getNative`,
+    //     eth: `https://eth.blockscout.com/api/v2/addresses/${publicAddress}`,
+    //   }
+    //   return networkNames[prefix]
+    // }
+
+    // const nativeUrl = (prefix: string): string => {
+    //   const networkNames: { [key: string]: string } = {
+    //     base: `https://base.blockscout.com/api/v2/addresses/${publicAddress}`,
+    //     optimism: `https://optimism.blockscout.com/api/v2/addresses/${publicAddress}`,
+    //     arbitrum: `https://arbitrum.blockscout.com/api/v2/addresses/${publicAddress}`,
+    //     avalanche: `https://glacier-api.avax.network/v1/chains/43114/addresses/${publicAddress}/balances:getNative`,
+    //     ethereum: `https://eth.blockscout.com/api/v2/addresses/${publicAddress}`,
+    //   }
+    //   return networkNames[prefix]
+    // }
+
     try {
-      const response = await fetch(url(prefix))
+      const response = await fetch(urlTest(prefix))
+      const native = await fetch(nativeUrlTest(prefix))
       if (!response.ok) {
         throw new Error(`Failed to fetch data for ${publicAddress}`)
       }
 
       const data = await response.json()
+      const nativeCurrency = await native.json()
 
-      data.forEach((d: any) => {
-        const token = {
-          address: d.token.address,
-          name: d.token.name,
-          symbol: d.token.symbol,
-          iconUrl: d.token.icon_url,
-          balance: d.value,
-          type: d.token.type,
-        }
+      if (prefix === 'avalanche') {
+        tokensArray.push({
+          address: 'native',
+          name: nativeCurrency.nativeTokenBalance.name,
+          symbol: nativeCurrency.nativeTokenBalance.symbol,
+          balance: nativeCurrency.nativeTokenBalance.balance,
+          decimals: nativeCurrency.nativeTokenBalance.decimals,
+          type: 'ERC-20',
+        })
+        data.erc20TokenBalances.forEach((d: any) => {
+          const token = {
+            address: d.address,
+            name: d.name,
+            symbol: d.symbol,
+            balance: d.balance,
+            decimals: d.decimals,
+            type: d.ercType,
+          }
 
-        tokensArray.push(token)
-      })
+          tokensArray.push(token)
+        })
+      } else {
+        tokensArray.push({
+          address: 'native',
+          name: 'Ethereum',
+          symbol: 'ETH',
+          balance: nativeCurrency.coin_balance,
+          decimals: '18',
+          type: 'ERC-20',
+        })
+        data.forEach((d: any) => {
+          const token = {
+            address: d.token.address,
+            name: d.token.name,
+            symbol: d.token.symbol,
+            iconUrl: d.token.icon_url,
+            balance: d.value,
+            decimals: d.token.decimals,
+            type: d.token.type,
+          }
+
+          tokensArray.push(token)
+        })
+      }
+
+      //.filter((dat: any) => dat.token.circulating_market_cap !== null)
 
       this.setUserTokensInWallet(tokensArray)
     } catch (error) {
@@ -734,7 +782,7 @@ export class ConnectStore {
         )
         this.setEthPrice(response.data?.result?.ethusd)
       } else {
-        this.setEthPrice(0.99888)
+        this.setEthPrice(1.01)
       }
       this.setLoading(false)
     } catch (error) {
@@ -767,8 +815,40 @@ export class ConnectStore {
     this.userTokensInWallet = value
   }
 
+  setTransferAmmount = (value: string) => {
+    this.transferAmount = value
+  }
+
+  setAvailableDestinationTokens = (value: string[]) => {
+    this.availableDestinationTokens = value
+  }
+
+  setAvailableRoutes = (value: any[]) => {
+    this.availableRoutes = value
+  }
+
+  setBestRouteQuote = (value: any) => {
+    this.bestRouteQuote = value
+  }
+
+  setInitiateReceipt = (value: any) => {
+    this.initiateReceipt = value
+  }
+
+  setFinalReceipt = (value: any) => {
+    this.finalReceipt = value
+  }
+
   setLoading = (val: boolean) => {
     this.loading = val
+  }
+
+  setBridgeComplete = (val: boolean) => {
+    this.bridgeComplete = val
+  }
+
+  setTransactionHash = (value: string) => {
+    this.transactionHash = value
   }
 
   setIsAwaitingVAA = (value: boolean) => {

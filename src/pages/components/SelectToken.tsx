@@ -35,23 +35,29 @@ const SelectToken = ({ setActiveTab, setToken, amount }: SelectTokenProps) => {
         break
     }
 
-    return Number(converted.toFixed(3))
+    return Number(converted.toFixed(4))
   }
 
   useEffect(() => {
     connectStore.setSelectedChain(chains[0])
   }, [])
 
-  const selectUserToken = (token: Token) => {
+  const selectUserToken = async (token: Token) => {
     if (setToken) setToken(token)
+    await connectStore.getPrice(token.symbol.toLowerCase())
     connectStore.setSelectedToken(token as any)
-    getConversion(amount, token.symbol.toLowerCase())
+    const amt = getConversion(amount, token.symbol.toLowerCase())
+    connectStore.setTransferAmmount(amt.toString())
     setActiveTab('DEFAULT')
   }
 
   const handleChainSelect = (chn: Chain) => {
     connectStore.setSelectedChain(chn)
     connectStore.getUserTokensInWallet(userEvmAddress, chn.title)
+  }
+
+  const getBalance = (balance: string, decimals: string) => {
+    return parseFloat(balance) / Math.pow(10, parseInt(decimals))
   }
 
   return (
@@ -98,15 +104,18 @@ const SelectToken = ({ setActiveTab, setToken, amount }: SelectTokenProps) => {
             onClick={() => selectUserToken(token)}
           >
             <img
-              src={`/images/tokens/${token}`}
+              src={`/images/tokens/${token?.symbol?.toLowerCase()}.svg`}
               alt="token"
               className="token-image"
               width={100}
               height={100}
             />
             <div className="w-full">
-              <div className="token-symbol">{token.symbol}</div>
-              <div className="token-name">{token.name.toUpperCase()}</div>
+              <div className="token-symbol">{token?.symbol}</div>
+              <div className="token-name">{token?.name?.toUpperCase()}</div>
+            </div>
+            <div className="">
+              {getBalance(token?.balance!, token?.decimals!)}
             </div>
           </div>
         ))}

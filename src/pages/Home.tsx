@@ -1,8 +1,10 @@
 import { Button } from '@/components/ui/button'
 import CheckoutComponent from './components/CheckoutComponent'
 import Navbar from './components/Layouts/Navbar'
+import { useNavigate } from 'react-router-dom'
 
 const Home = () => {
+  const navigate = useNavigate()
   return (
     <>
       <section className="relative h-[100dvh] bg-[#1F2026]">
@@ -26,8 +28,12 @@ const Home = () => {
                 >
                   Read our Blog
                 </Button>
-                <Button variant="nav" className="btn-primary">
-                  Launch App
+                <Button
+                  variant="nav"
+                  className="btn-primary"
+                  onClick={() => navigate('/demo')}
+                >
+                  Try Demo
                 </Button>
               </div>
             </div>
