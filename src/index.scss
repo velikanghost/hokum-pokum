@@ -1,6 +1,6 @@
 @use './styles/abstracts/variables' as *;
+@use './styles/Main.scss';
 @import url('https://fonts.googleapis.com/css2?family=Catamaran:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
-@import './styles/Main.scss';
 
 @tailwind base;
 @tailwind components;

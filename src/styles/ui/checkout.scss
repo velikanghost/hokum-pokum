@@ -147,13 +147,15 @@
   overflow-y: scroll;
 }
 .token-details {
-  display: grid;
-  grid-template-columns: 50px 1fr;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   padding: 8px;
 }
 .token-details .token-image {
   width: 50px;
+  height: 50px;
 }
 .token-details .token-name {
   font-size: 14px;
