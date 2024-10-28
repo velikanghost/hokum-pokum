@@ -21,9 +21,9 @@ const Transfer = () => {
   const [acct, setAcct] = useState<JsonRpcSigner>()
   const [activeTab, setActiveTab] = useState<Tab>('DEFAULT')
   const [userToken, setUserToken] = useState<Token>()
-  const [merchantToken, setMerChantToken] = useState<Token>(tokens[2])
-  const [merchantAmount, setMerchantAmount] = useState<number>(5)
-  const [chain, setChain] = useState<string>('Arbitrum Sepolia')
+  const [merchantToken] = useState<Token>(tokens[2])
+  const [merchantAmount] = useState<number>(5)
+  const [chain] = useState<string>('Arbitrum Sepolia')
 
   const getAccount = async () => {
     await connectStore.connectWallet()
@@ -140,7 +140,7 @@ const Transfer = () => {
                   </div>
                 )}
 
-                {bridgeComplete === true && (
+                {bridgeComplete && (
                   <div className="my-3 bg-[#EBE8E2]/70 token-swap-card">
                     <p className="mb-3 text-2xl font-semibold text-secondary-foreground">
                       Payment complete

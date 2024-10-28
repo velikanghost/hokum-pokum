@@ -1,8 +1,6 @@
 import { useContext, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { RiCheckDoubleFill } from 'react-icons/ri'
-import SelectToken from './SelectToken'
-import { Token } from '@/lib/types'
 import { LoadingIcon } from './Icons/LoadingIcon'
 import { StoreContext } from '@/mobx store/RootStore'
 import { observer } from 'mobx-react-lite'
@@ -11,8 +9,7 @@ export type Tab = 'DEFAULT' | 'SELECT_TOKEN'
 
 const CheckoutComponent = () => {
   const { connectStore } = useContext(StoreContext)
-  const [activeTab, setActiveTab] = useState<Tab>('DEFAULT')
-  const [userToken, setUserToken] = useState<Token>()
+  const [activeTab] = useState<Tab>('DEFAULT')
 
   return (
     <div
@@ -46,13 +43,6 @@ const CheckoutComponent = () => {
             </div>
             <div className="checkout-card__footer"></div>
           </>
-        )}
-        {activeTab === 'SELECT_TOKEN' && (
-          <SelectToken
-            setActiveTab={setActiveTab}
-            setToken={setUserToken}
-            amount={0}
-          />
         )}
       </div>
       {connectStore.isAwaitingVAA && (

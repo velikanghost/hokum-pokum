@@ -15,10 +15,10 @@ import {
   MayanRouteWH,
 } from '@mayanfinance/wormhole-sdk-route'
 import { EvmAddress } from '@wormhole-foundation/sdk-evm'
-import { SolanaAddress } from '@wormhole-foundation/sdk-solana'
+//import { SolanaAddress } from '@wormhole-foundation/sdk-solana'
 import evm from '@wormhole-foundation/sdk/evm'
 import solana from '@wormhole-foundation/sdk/solana'
-import { MetaMaskSigner, SolanaWalletSigner } from '@/lib/helpers/signer'
+import { MetaMaskSigner } from '@/lib/helpers/signer'
 import { Chain as ChainType } from '@/lib/types/chain'
 import { Token } from '@/lib/types'
 import axios from 'axios'

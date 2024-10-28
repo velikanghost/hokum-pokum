@@ -10,7 +10,7 @@ interface Props {
 
 const MerchantLayer = ({ network, token, amount }: Props) => {
   const { connectStore } = useContext(StoreContext)
-  const [merchantPrice, setMerchantPrice] = useState<number>(0)
+  const [merchantPrice] = useState<number>(0)
 
   useEffect(() => {
     connectStore.setDefaultMerchantToken(token.symbol.toLowerCase())
