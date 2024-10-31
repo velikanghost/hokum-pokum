@@ -57,8 +57,8 @@ export class MetaMaskSigner implements SignAndSendSigner<Network, Chain> {
 
     // Default gas values
     let gasLimit = this.opts?.gasLimit || 1_000_000n
-    let maxFeePerGas = this.opts?.maxFeePerGas || 1_000_000_000n // 8.5 gwei
-    let maxPriorityFeePerGas = this.opts?.maxPriorityFeePerGas || 500_000_000n // 7.5 gwei
+    let maxFeePerGas = this.opts?.maxFeePerGas || 3_000_000_000n // 8.5 gwei
+    let maxPriorityFeePerGas = this.opts?.maxPriorityFeePerGas || 1_000_000_000n // 7.5 gwei
 
     for (const transaction of tx) {
       const transactionRequest: TransactionRequest = {
