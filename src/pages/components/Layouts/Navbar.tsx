@@ -9,10 +9,12 @@ import { MobileSidebar } from './MobileSidebar'
 import { NavigationMenuLink } from '@radix-ui/react-navigation-menu'
 import { Button } from '@/components/ui/button'
 import { BsJournalText } from 'react-icons/bs'
-import { useNavigate } from 'react-router-dom'
+import { RxExit } from 'react-icons/rx'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const Navbar = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [showSidebar, setShowSidebar] = useState<boolean>(false)
   const menuItems = [
     {
@@ -38,34 +40,49 @@ const Navbar = () => {
             Heekowave
           </NavigationMenuItem>
 
-          <NavigationMenuItem className="mr-auto">
-            <button
-              className="menu-button lg:hidden"
-              onClick={() => setShowSidebar(true)}
-            >
-              {showSidebar ? null : <RiMenu2Line size={30} color="#EBE8E2" />}
-            </button>
-          </NavigationMenuItem>
-
-          <div className="nav-menu-items text-primary-foreground">
-            {menuItems.map((item, i) => (
-              <NavigationMenuLink
-                className="flex items-center justify-center h-full gap-2 py-4 text-base hover:animate-bounce"
-                href={item.link}
-                key={i}
-                target={item.name === 'Home' ? '_parent' : '_blank'}
-              >
-                {item.icon} {item.name}
-              </NavigationMenuLink>
-            ))}
+          {location.pathname.includes('/demo') ? (
             <Button
               variant="nav"
-              className="btn-primary hover:animate-pulse"
-              onClick={() => navigate('/demo')}
+              className="flex items-center gap-3 btn-primary hover:animate-pulse"
+              onClick={() => navigate('/')}
             >
-              Try Demo
+              Exit
+              <RxExit />
             </Button>
-          </div>
+          ) : (
+            <>
+              <NavigationMenuItem className="mr-auto">
+                <button
+                  className="menu-button lg:hidden"
+                  onClick={() => setShowSidebar(true)}
+                >
+                  {showSidebar ? null : (
+                    <RiMenu2Line size={30} color="#EBE8E2" />
+                  )}
+                </button>
+              </NavigationMenuItem>
+
+              <div className="nav-menu-items text-primary-foreground">
+                {menuItems.map((item, i) => (
+                  <NavigationMenuLink
+                    className="flex items-center justify-center h-full gap-2 py-4 text-base hover:animate-bounce"
+                    href={item.link}
+                    key={i}
+                    target={item.name === 'Home' ? '_parent' : '_blank'}
+                  >
+                    {item.icon} {item.name}
+                  </NavigationMenuLink>
+                ))}
+                <Button
+                  variant="nav"
+                  className="btn-primary hover:animate-pulse"
+                  onClick={() => navigate('/demo')}
+                >
+                  Try Demo
+                </Button>
+              </div>
+            </>
+          )}
         </NavigationMenuList>
       </NavigationMenu>
       {showSidebar && (
