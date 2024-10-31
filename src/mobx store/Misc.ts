@@ -8,7 +8,6 @@ import {
   Chain,
   routes,
   canonicalAddress,
-  rpc,
 } from '@wormhole-foundation/sdk'
 import {
   MayanRouteMCTP,
