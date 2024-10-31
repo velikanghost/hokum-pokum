@@ -1,11 +1,11 @@
 import { useContext, useEffect } from 'react'
-import { Tab } from './CheckoutComponent'
 import { BiLeftArrowAlt, BiSearchAlt } from 'react-icons/bi'
 import { Token } from '@/lib/types'
 import { Chain } from '@/lib/types/chain'
 import { chains } from '@/lib/data/chains'
 import { StoreContext } from '@/mobx store/RootStore'
 import { observer } from 'mobx-react-lite'
+import { Tab } from '@/lib/types/all'
 
 interface SelectTokenProps {
   setActiveTab: (value: Tab) => void
@@ -40,6 +40,7 @@ const SelectToken = ({ setActiveTab, setToken, amount }: SelectTokenProps) => {
 
   useEffect(() => {
     connectStore.setSelectedChain(chains[0])
+    connectStore.getUserTokensInWallet(userEvmAddress, chains[0].title)
   }, [])
 
   const selectUserToken = async (token: Token) => {

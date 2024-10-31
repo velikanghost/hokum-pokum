@@ -8,7 +8,7 @@ import {
   Chain,
   routes,
   canonicalAddress,
-  TransferRequest,
+  rpc,
 } from '@wormhole-foundation/sdk'
 import {
   MayanRouteMCTP,
@@ -16,14 +16,14 @@ import {
   MayanRouteWH,
 } from '@mayanfinance/wormhole-sdk-route'
 import { EvmAddress } from '@wormhole-foundation/sdk-evm'
+//import { SolanaAddress } from '@wormhole-foundation/sdk-solana'
 import evm from '@wormhole-foundation/sdk/evm'
 import solana from '@wormhole-foundation/sdk/solana'
-import { MetaMaskSigner, SolanaWalletSigner } from '@/lib/helpers/signer'
+import { MetaMaskSigner } from '@/lib/helpers/signer'
 import { Chain as ChainType } from '@/lib/types/chain'
 import { Token } from '@/lib/types'
 import axios from 'axios'
 import { Connection } from '@solana/web3.js'
-import { UsdPrice } from '@/lib/types/all'
 
 type Account = {
   address: string
@@ -53,12 +53,9 @@ export class ConnectStore {
     explorer: '',
     icon: '',
   }
-  merchantAmount: number = 5
-  merchantAddress: string = '0x0cf76957AF81329917E7c29f8cbf9b8FAd7842ce'
   transferAmount: string = ''
   availableSourceTokens: Token[] = []
   userTokensInWallet: Token[] = []
-  tokensInWallet: any[] = []
   availableDestinationTokens: string[] = []
   availableRoutes: any[] = []
   bestRouteQuote: any = {}
@@ -66,9 +63,6 @@ export class ConnectStore {
   finalReceipt: any = {}
   bridgeComplete: boolean = false
   transactionHash: string = ''
-  usdPrice: UsdPrice = {
-    usd: 0,
-  }
   ethPrice: number = 0
   defaultPrice: number = 0
   defaultMerchantToken: string = ''
@@ -76,7 +70,6 @@ export class ConnectStore {
   INFURA_API_KEY = import.meta.env.VITE_INFURA_API_KEY
   ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY
   ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY
-  MORALIS_API_KEY = import.meta.env.VITE_MORALIS_API_KEY
   solanaConnection = new Connection('https://api.devnet.solana.com')
 
   chains = {
@@ -91,6 +84,30 @@ export class ConnectStore {
     },
     Sepolia: {
       rpc: `https://sepolia.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Holesky: {
+      rpc: `https://holesky.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Ethereum: {
+      rpc: `https://mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Optimism: {
+      rpc: `https://optimism-mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Bsc: {
+      rpc: `https://bsc-mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Arbitrum: {
+      rpc: `https://arbitrum-mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Base: {
+      rpc: `https://base-mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Mantle: {
+      rpc: `https://mantle-mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
+    },
+    Polygon: {
+      rpc: `https://polygon-mainnet.infura.io/v3/${this.INFURA_API_KEY}`,
     },
     Solana: {
       rpc: `https://api.devnet.solana.com`,
@@ -167,7 +184,9 @@ export class ConnectStore {
     }
   }
 
-  getChainIdByNetworkName = (networkName: string): string | undefined => {
+  // Function to get chainId by network name
+  //Testnet
+  getChainIdByNetworkNamee = (networkName: string): string | undefined => {
     // Define a mapping of network names to chain IDs
     const networkChainIds: { [key: string]: string } = {
       Sepolia: '0xaa36a7',
@@ -176,7 +195,23 @@ export class ConnectStore {
       ArbitrumSepolia: '0x66eee',
       Holesky: '0x4268',
       Avalanche: '0xa869',
+      Mantle: '0x138b',
       Celo: '0xaef3',
+    }
+    return networkChainIds[networkName] || undefined
+  }
+
+  // Function to get chainId by network name
+  getChainIdByNetworkName = (networkName: string): string | undefined => {
+    // Define a mapping of network names to chain IDs
+    const networkChainIds: { [key: string]: string } = {
+      Ethereum: '0x1',
+      Base: '0x2105',
+      Optimism: '0xa',
+      Arbitrum: '0xa4b1',
+      Avalanche: '0xa86a',
+      Mantle: '0x1388',
+      Celo: '0xa4ec',
     }
     return networkChainIds[networkName] || undefined
   }
@@ -303,182 +338,6 @@ export class ConnectStore {
     return selectedRoute || null
   }
 
-  bridgeTest = async (
-    source: Chain,
-    destination: Chain,
-    selectedToken: string,
-    amount: string,
-    destinationAddress: string,
-  ) => {
-    this.setLoading(true)
-    console.log({ source, destination, amount })
-    // Get the current chain ID
-    const currentChainId = await window.ethereum.request({
-      method: 'eth_chainId',
-    })
-
-    const sourceChainId = this.getChainIdByNetworkName(source)
-
-    // Check if we're not on Sepolia
-    if (currentChainId !== sourceChainId) {
-      console.log(`Not on ${source} , switching...`)
-
-      // Attempt to switch to Sepolia
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: sourceChainId }],
-      })
-      console.log(`Successfully switched to ${source}`)
-    } else {
-      console.log('Already on required chain')
-    }
-
-    const wh = await wormhole('Testnet', [evm, solana], {
-      chains: this.chains,
-    })
-
-    // Grab a ChainContext object from our configured Wormhole instance
-    const ctx = wh.getChain(source)
-    const rcv = wh.getChain(destination)
-
-    let sender: MetaMaskSigner | SolanaWalletSigner
-
-    if (source === 'Solana') {
-      sender = new SolanaWalletSigner(
-        this.solanaConnection,
-        ctx.chain,
-        this.userSolanaWallet,
-        this.userSolanaAddress,
-      )
-    } else {
-      sender = new MetaMaskSigner(
-        this.userEvmAccount as JsonRpcSigner,
-        ctx.chain,
-        this.userEvmAddress,
-      )
-    }
-
-    const receiver = new MetaMaskSigner(
-      this.userEvmAccount as JsonRpcSigner,
-      rcv.chain,
-      this.userEvmAddress,
-    )
-
-    // Create new resolver, passing the set of routes to consider
-    const resolver = wh.resolver([
-      routes.AutomaticTokenBridgeRoute,
-      routes.CCTPRoute,
-      routes.AutomaticCCTPRoute,
-      routes.AutomaticPorticoRoute,
-      MayanRouteMCTP,
-      MayanRouteSWIFT,
-      MayanRouteWH,
-    ])
-    // EXAMPLE_RESOLVER_CREATE
-
-    // EXAMPLE_RESOLVER_LIST_TOKENS
-    // what tokens are available on the source chain?
-    const srcTokens = await resolver.supportedSourceTokens(ctx)
-    console.log(
-      'Allowed source tokens: ',
-      srcTokens.map((t) => canonicalAddress(t)),
-    )
-
-    // Grab the first one for the example
-    // const sendToken = srcTokens[0]!;
-    const sendToken = Wormhole.tokenId(ctx.chain, selectedToken)
-
-    // given the send token, what can we possibly get on the destination chain?
-    const destTokens = await resolver.supportedDestinationTokens(
-      sendToken,
-      ctx,
-      rcv,
-    )
-    console.log(
-      'For the given source token and routes configured, the following tokens may be receivable: ',
-      destTokens.map((t) => canonicalAddress(t)),
-    )
-    //grab the first one for the example
-    const destinationToken = destTokens[0]!
-    // EXAMPLE_RESOLVER_LIST_TOKENS
-
-    // EXAMPLE_REQUEST_CREATE
-    // creating a transfer request fetches token details
-    // since all routes will need to know about the tokens
-    const tr = await routes.RouteTransferRequest.create(wh, {
-      source: sendToken,
-      destination: destinationToken,
-    })
-
-    // resolve the transfer request to a set of routes that can perform it
-    const foundRoutes = await resolver.findRoutes(tr)
-    console.log(
-      'For the transfer parameters, we found these routes: ',
-      foundRoutes,
-    )
-    // EXAMPLE_REQUEST_CREATE
-
-    // Sort the routes given some input (not required for mvp)
-    // const bestRoute = (await resolver.sortRoutes(foundRoutes, "cost"))[0]!;
-    const bestRoute = foundRoutes[0]!
-    console.log('Selected: ', bestRoute)
-
-    // EXAMPLE_REQUEST_VALIDATE
-    console.log(
-      'This route offers the following default options',
-      bestRoute.getDefaultOptions(),
-    )
-    // Specify the amount as a decimal string
-    const amt = amount
-    // Create the transfer params for this request
-    const transferParams = { amount: amt, options: { nativeGas: 0 } }
-
-    // validate the transfer params passed, this returns a new type of ValidatedTransferParams
-    // which (believe it or not) is a validated version of the input params
-    // this new var must be passed to the next step, quote
-    const validated = await bestRoute.validate(tr, transferParams)
-    if (!validated.valid) throw validated.error
-    console.log('Validated parameters: ', validated.params)
-
-    // get a quote for the transfer, this too returns a new type that must
-    // be passed to the next step, execute (if you like the quote)
-    const quote = await bestRoute.quote(tr, validated.params)
-    if (!quote.success) throw quote.error
-    console.log('Best route quote: ', quote)
-    // EXAMPLE_REQUEST_VALIDATE
-
-    const merchantAddress = new EvmAddress(destinationAddress)
-
-    //evm
-    const receiverAddress = {
-      chain: destination,
-      address: merchantAddress,
-    }
-
-    // If you're sure you want to do this, set this to true
-    const imSure = true
-    if (imSure) {
-      // EXAMPLE_REQUEST_INITIATE
-      // Now the transfer may be initiated
-      // A receipt will be returned, guess what you gotta do with that?
-      console.log({ tr })
-      const receipt = await bestRoute.initiate(
-        tr,
-        sender,
-        quote,
-        receiverAddress,
-      )
-      console.log('Initiated transfer with receipt: ', receipt)
-      // EXAMPLE_REQUEST_INITIATE
-
-      // Kick off a wait log, if there is an opportunity to complete, this function will do it
-      // see the implementation for how this works
-      await routes.checkAndCompleteTransfer(bestRoute, receipt, receiver)
-    } else {
-      console.log('Not initiating transfer (set `imSure` to true to do so)')
-    }
-  }
-
   bridgeViaRouter = async (
     source: Chain,
     destination: Chain,
@@ -509,7 +368,7 @@ export class ConnectStore {
       console.log('Already on required chain')
     }
 
-    const wh = await wormhole('Testnet', [evm, solana], {
+    const wh = await wormhole('Mainnet', [evm, solana], {
       chains: this.chains,
     })
 
@@ -517,22 +376,20 @@ export class ConnectStore {
     const ctx = wh.getChain(source)
     const rcv = wh.getChain(destination)
 
-    let sender: MetaMaskSigner | SolanaWalletSigner
+    //evm
+    const sender = new MetaMaskSigner(
+      this.userEvmAccount as JsonRpcSigner,
+      ctx.chain,
+      this.userEvmAddress,
+    )
 
-    if (source === 'Solana') {
-      sender = new SolanaWalletSigner(
-        this.solanaConnection,
-        ctx.chain,
-        this.userSolanaWallet,
-        this.userSolanaAddress,
-      )
-    } else {
-      sender = new MetaMaskSigner(
-        this.userEvmAccount as JsonRpcSigner,
-        ctx.chain,
-        this.userEvmAddress,
-      )
-    }
+    //solana
+    // const sender = new SolanaWalletSigner(
+    //   this.solanaConnection,
+    //   ctx.chain,
+    //   this.userSolanaWallet,
+    //   this.userSolanaAddress,
+    // )
 
     const receiver = new MetaMaskSigner(
       this.userEvmAccount as JsonRpcSigner,
@@ -542,7 +399,6 @@ export class ConnectStore {
 
     // Create new resolver, passing the set of routes to consider
     const resolver = wh.resolver([
-      routes.TokenBridgeRoute as any,
       routes.AutomaticTokenBridgeRoute,
       routes.CCTPRoute,
       routes.AutomaticCCTPRoute,
@@ -668,7 +524,7 @@ export class ConnectStore {
       // A receipt will be returned, guess what you gotta do with that?
 
       try {
-        const receipt: TransferRequest = await bestRoute.initiate(
+        const receipt = await bestRoute.initiate(
           transferRequests[0],
           sender,
           bestQuote,
@@ -678,7 +534,6 @@ export class ConnectStore {
         console.log('Initiated transfer with receipt: ', receipt)
         this.setInitiateReceipt(receipt)
       } catch (error) {
-        console.log(error)
         const hexValue = this.extractHexValue(error)
         if (hexValue?.match(/0x[0-9a-fA-F]{64}/)) {
           this.setTransactionHash(hexValue)
@@ -747,9 +602,74 @@ export class ConnectStore {
     }
   }
 
+  // getAvailableSourceTokens = async (selectedChain: ChainType) => {
+  //   const source = selectedChain.title.replace(/\s+/g, '')
+  //   const wh = await wormhole('Testnet', [evm, solana], {
+  //     chains: {
+  //       Avalanche: {
+  //         rpc: `https://avalanche-fuji.infura.io/v3/${this.INFURA_API_KEY}`,
+  //       },
+  //     },
+  //   })
+
+  //   const ctx = wh.getChain(source as Chain)
+
+  //   // Create new resolver, passing the set of routes to consider
+  //   const resolver = wh.resolver([
+  //     routes.TokenBridgeRoute,
+  //     routes.AutomaticTokenBridgeRoute,
+  //     routes.CCTPRoute,
+  //     routes.AutomaticCCTPRoute,
+  //     routes.AutomaticPorticoRoute,
+  //     MayanRouteMCTP,
+  //     MayanRouteSWIFT,
+  //     MayanRouteWH,
+  //   ])
+
+  //   // What tokens are available on the source chain?
+  //   const srcTokens = await resolver.supportedSourceTokens(ctx)
+  //   const arr = srcTokens.map((t) => canonicalAddress(t))
+
+  //   console.log(
+  //     'Allowed source tokens: ',
+  //     srcTokens.map((t) => canonicalAddress(t)),
+  //   )
+
+  //   // Create an array to store the results
+  //   const tokensArray: any = []
+
+  //   // Iterate over the arr and make an API request for each token address
+  //   const requests = arr.map(async (tokenAddress) => {
+  //     try {
+  //       const response = await fetch(
+  //         `https://eth-sepolia.blockscout.com/api/v2/tokens/${tokenAddress}`,
+  //       )
+  //       if (!response.ok) {
+  //         throw new Error(`Failed to fetch data for ${tokenAddress}`)
+  //       }
+  //       const data = await response.json()
+
+  //       // Extract the needed values: address, name, and symbol
+  //       const { address, name, symbol } = data
+
+  //       // Push the extracted data into the tokensArray
+  //       tokensArray.push({ address, name, symbol })
+  //     } catch (error) {
+  //       console.error(`Error fetching token data for ${tokenAddress}:`, error)
+  //     }
+  //   })
+
+  //   // Wait for all requests to complete
+  //   await Promise.all(requests)
+
+  //   // Log or return the tokensArray
+  //   //console.log('Tokens:', tokensArray)
+
+  //   this.setAvailableSourceTokens(tokensArray)
+  // }
+
   getUserTokensInWallet = async (publicAddress: string, chain: string) => {
     const tokensArray: Token[] = []
-    console.log(chain)
     let prefix: string
     if (chain === 'optimism-sepolia') {
       prefix = chain.split('-')[0].toLowerCase()
@@ -757,26 +677,50 @@ export class ConnectStore {
       prefix = chain.split(' ')[0].toLowerCase()
     }
 
+    // const urlTest = (prefix: string): string => {
+    //   const networkNames: { [key: string]: string } = {
+    //     base: `https://base-sepolia.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
+    //     sepolia: `https://eth-sepolia.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
+    //     optimism: `https://optimism-sepolia.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
+    //     arbitrum: `https://sepolia-explorer.arbitrum.io/address/${publicAddress}/token-balances`,
+    //     avalanche: `https://glacier-api.avax.network/v1/chains/43113/addresses/${publicAddress}/balances:listErc20?pageSize=50&filterSpamTokens=true`,
+    //   }
+    //   return networkNames[prefix]
+    // }
+
+    // const nativeUrlTest = (prefix: string): string => {
+    //   const networkNames: { [key: string]: string } = {
+    //     base: `https://base-sepolia.blockscout.com/api/v2/addresses/${publicAddress}`,
+    //     optimism: `https://optimism-sepolia.blockscout.com/api/v2/addresses/${publicAddress}`,
+    //     arbitrum: `https://arbitrum.blockscout.com/api/v2/addresses/${publicAddress}`,
+    //     avalanche: `https://glacier-api.avax.network/v1/chains/43113/addresses/${publicAddress}/balances:getNative`,
+    //     sepolia: `https://eth-sepolia.blockscout.com/api/v2/addresses/${publicAddress}`,
+    //   }
+    //   return networkNames[prefix]
+    // }
+
     const url = (prefix: string): string => {
       const networkNames: { [key: string]: string } = {
-        base: `https://base-sepolia.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
-        sepolia: `https://eth-sepolia.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
-        optimism: `https://optimism-sepolia.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
+        base: `https://base.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
+        ethereum: `https://eth.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
+        optimism: `https://optimism.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
+        mantle: `https://explorer.mantle.xyz/api/v2/addresses/${publicAddress}/token-balances`,
         arbitrum: `https://sepolia-explorer.arbitrum.io/address/${publicAddress}/token-balances`,
-        avalanche: `https://glacier-api.avax.network/v1/chains/43113/addresses/${publicAddress}/balances:listErc20?pageSize=50&filterSpamTokens=true`,
-        celo: `https://celo-alfajores.blockscout.com/api/v2/addresses/${publicAddress}/token-balances`,
+        avalanche: `https://glacier-api.avax.network/v1/chains/43114/addresses/${publicAddress}/balances:listErc20?pageSize=50&filterSpamTokens=true`,
+        avax: `https://glacier-api.avax.network/v1/chains/43114/addresses/${publicAddress}/balances:getNative`,
+        eth: `https://eth.blockscout.com/api/v2/addresses/${publicAddress}`,
       }
       return networkNames[prefix]
     }
 
     const nativeUrl = (prefix: string): string => {
       const networkNames: { [key: string]: string } = {
-        base: `https://base-sepolia.blockscout.com/api/v2/addresses/${publicAddress}`,
-        optimism: `https://optimism-sepolia.blockscout.com/api/v2/addresses/${publicAddress}`,
+        base: `https://base.blockscout.com/api/v2/addresses/${publicAddress}`,
+        optimism: `https://optimism.blockscout.com/api/v2/addresses/${publicAddress}`,
+        mantle: `https://explorer.mantle.xyz/api/v2/addresses/${publicAddress}`,
         arbitrum: `https://arbitrum.blockscout.com/api/v2/addresses/${publicAddress}`,
-        avalanche: `https://glacier-api.avax.network/v1/chains/43113/addresses/${publicAddress}/balances:getNative`,
-        sepolia: `https://eth-sepolia.blockscout.com/api/v2/addresses/${publicAddress}`,
-        celo: `https://celo-alfajores.blockscout.com/api/v2/addresses/${publicAddress}`,
+        avalanche: `https://glacier-api.avax.network/v1/chains/43114/addresses/${publicAddress}/balances:getNative`,
+        ethereum: `https://eth.blockscout.com/api/v2/addresses/${publicAddress}`,
       }
       return networkNames[prefix]
     }
@@ -790,8 +734,6 @@ export class ConnectStore {
 
       const data = await response.json()
       const nativeCurrency = await native.json()
-
-      console.log({ data, nativeCurrency })
 
       if (prefix === 'avalanche') {
         tokensArray.push({
@@ -814,51 +756,33 @@ export class ConnectStore {
 
           tokensArray.push(token)
         })
-      } else if (prefix === 'celo') {
-        tokensArray.push({
-          address: 'native',
-          name: 'Celo',
-          symbol: 'CELO',
-          balance: nativeCurrency.coin_balance,
-          decimals: '18',
-          type: 'ERC-20',
-        })
-        data.forEach((d: any) => {
-          const token = {
-            address: d.token.address,
-            name: d.token.name,
-            symbol: d.token.symbol,
-            iconUrl: d.token.icon_url,
-            balance: d.value,
-            decimals: d.token.decimals,
-            type: d.token.type,
-          }
-
-          tokensArray.push(token)
-        })
       } else {
         tokensArray.push({
           address: 'native',
-          name: 'Ethereum',
-          symbol: 'ETH',
+          name: 'Mantle',
+          symbol: 'MNT',
           balance: nativeCurrency.coin_balance,
           decimals: '18',
           type: 'ERC-20',
         })
-        data.forEach((d: any) => {
-          const token = {
-            address: d.token.address,
-            name: d.token.name,
-            symbol: d.token.symbol,
-            iconUrl: d.token.icon_url,
-            balance: d.value,
-            decimals: d.token.decimals,
-            type: d.token.type,
-          }
+        data
+          .filter((dat: any) => dat.token.circulating_market_cap !== null)
+          .forEach((d: any) => {
+            const token = {
+              address: d.token.address,
+              name: d.token.name,
+              symbol: d.token.symbol,
+              iconUrl: d.token.icon_url,
+              balance: d.value,
+              decimals: d.token.decimals,
+              type: d.token.type,
+            }
 
-          tokensArray.push(token)
-        })
+            tokensArray.push(token)
+          })
       }
+
+      //.filter((dat: any) => dat.token.circulating_market_cap !== null)
 
       this.setUserTokensInWallet(tokensArray)
     } catch (error) {
@@ -887,30 +811,6 @@ export class ConnectStore {
   getUsdPrice = async () => {
     //https://api.coingecko.com/api/v3/simple/price?ids=ethereum,ethereum,usd-coin,wrapped-bitcoin,tether,dai,binance-usd,matic-network,matic-network,ethereum,usd-coin,tether,binancecoin,binancecoin,usd-coin,avalanche-2,avalanche-2,usd-coin,tether,ethereum,fantom,fantom,usd-coin,celo,tether,moonbeam,moonbeam,solana,solana,usd-coin,tether,sui,aptos,ethereum,ethereum,usd-coin,tether,ethereum,ethereum,usd-coin,tether,ethereum,tether,ethereum,ethereum,usd-coin,tether,wrapped-steth,wrapped-steth,wrapped-steth,wrapped-steth,wrapped-steth,klay-token,wrapped-klay,pyth-network,ethereum,ethereum,ethereum,ethereum,okb,okb,mantle,mantle,tbtc,tbtc,tbtc,tbtc,tbtc,tbtc&vs_currencies=usd
     //https://price-api.mayan.finance/v3/tokens?chain=base
-    try {
-      const response = await axios.get(
-        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,ethereum,usd-coin,wrapped-bitcoin,tether,dai,binance-usd,matic-network,matic-network,ethereum,usd-coin,tether,binancecoin,binancecoin,usd-coin,avalanche-2,avalanche-2,usd-coin,tether,ethereum,fantom,fantom,usd-coin,celo,tether,moonbeam,moonbeam,solana,solana,usd-coin,tether,sui,aptos,ethereum,ethereum,usd-coin,tether,ethereum,ethereum,usd-coin,tether,ethereum,tether,ethereum,ethereum,usd-coin,tether,wrapped-steth,wrapped-steth,wrapped-steth,wrapped-steth,wrapped-steth,klay-token,wrapped-klay,pyth-network,ethereum,ethereum,ethereum,ethereum,okb,okb,mantle,mantle,tbtc,tbtc,tbtc,tbtc,tbtc,tbtc&vs_currencies=usd',
-      )
-      this.setUsdPrice(response.data)
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  setTokensInWallet = (value: any) => {
-    this.tokensInWallet = value
-  }
-
-  setMerchantAmount = (value: number) => {
-    this.merchantAmount = value
-  }
-
-  setMerchantAddress = (value: string) => {
-    this.merchantAddress = value
-  }
-
-  setUsdPrice = (value: UsdPrice) => {
-    this.usdPrice = value
   }
 
   setUserEvmAccount = (data: JsonRpcSigner) => {

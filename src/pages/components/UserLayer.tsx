@@ -2,8 +2,8 @@ import { Button } from '@/components/ui/button'
 import { Token } from '@/lib/types'
 import { StoreContext } from '@/mobx store/RootStore'
 import { useContext, useEffect } from 'react'
-import { Tab } from './CheckoutComponent'
 import { observer } from 'mobx-react-lite'
+import { Tab } from '@/lib/types/all'
 
 interface Props {
   network: string
@@ -93,7 +93,7 @@ const UserLayer = ({ network, token, amount, setActiveTab, price }: Props) => {
         </p>
         {bridgeComplete ? null : (
           <Button
-            className="p-0 btn-secondary change-token-btn"
+            className="p-0 mb-0 btn-secondary change-token-btn"
             style={{ padding: '8px 12px', borderRadius: '17px' }}
             onClick={() => setActiveTab && setActiveTab('SELECT_TOKEN')}
           >

@@ -3,8 +3,7 @@ import { tokens } from '@/lib/data'
 import { StoreContext } from '@/mobx store/RootStore'
 import { JsonRpcSigner } from 'ethers'
 import { observer } from 'mobx-react-lite'
-import { useContext, useState } from 'react'
-import { Tab } from './components/CheckoutComponent'
+import { useContext, useEffect, useState } from 'react'
 import { LoadingIcon } from './components/Icons/LoadingIcon'
 import SelectToken from './components/SelectToken'
 import { Token } from '@/lib/types/token'
@@ -14,47 +13,60 @@ import UserLayer from './components/UserLayer'
 import { Chain } from '@wormhole-foundation/sdk'
 import { Link } from 'react-router-dom'
 import { MdArrowOutward } from 'react-icons/md'
+import { Tab } from '@/lib/types/all'
+import SetMerchant from './components/SetMerchant'
 
 const Transfer = () => {
   const { connectStore } = useContext(StoreContext)
-  const { transferAmount, bridgeComplete, transactionHash } = connectStore
+  const {
+    transferAmount,
+    bridgeComplete,
+    transactionHash,
+    merchantAmount,
+    merchantAddress,
+  } = connectStore
   const [acct, setAcct] = useState<JsonRpcSigner>()
   const [activeTab, setActiveTab] = useState<Tab>('DEFAULT')
   const [userToken, setUserToken] = useState<Token>()
+
   const [merchantToken] = useState<Token>(tokens[2])
-  const [merchantAmount] = useState<number>(5)
   const [chain] = useState<string>('Arbitrum Sepolia')
 
   const getAccount = async () => {
     await connectStore.connectWallet()
-    const { userEvmAccount, userEvmAddress } = connectStore
+    const { userEvmAccount } = connectStore
     setAcct(userEvmAccount as any)
-    connectStore.getUserTokensInWallet(
-      userEvmAddress,
-      userEvmAccount?.provider._network.name!,
-    )
   }
 
+  useEffect(() => {
+    connectStore.getUsdPrice()
+  }, [])
+
   const beginTransfer = async () => {
+    if (!userToken?.address) {
+      alert('Select a token first!')
+      return
+    }
+
     const chainFrom = connectStore.selectedChain.title.replace(/\s+/g, '')
     const chainTo = chain
       .split(' ')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join('')
 
-    await connectStore.bridgeViaRouter(
+    await connectStore.bridgeTest(
       chainFrom as Chain,
       chainTo as Chain,
       userToken?.address!,
       transferAmount,
-      '0x0cf76957af81329917e7c29f8cbf9b8fad7842ce',
+      merchantAddress,
     )
   }
 
   return (
     <div className="h-[100vh] bg-[#1F2026]">
       <Navbar />
-      <div className="flex">
+      <div className="flex lg:absolute lg:top-1/2 lg:left-1/2 lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2">
         <div
           className="flex flex-col items-center justify-center flex-1 checkout-container text-secondary lg:items-start"
           style={{ position: 'relative' }}
@@ -70,15 +82,23 @@ const Transfer = () => {
 
             <span>Pay with heekowave</span>
           </div>
+
           <div className="checkout-card">
             <div className="checkout-card__header">
               <h3 className="title">Checkout</h3>
+              {acct && (
+                <p className="text-md">
+                  {acct?.address?.substring(0, 5)}.....
+                  {acct?.address?.substring(37)}
+                </p>
+              )}
             </div>
             {activeTab === 'DEFAULT' && (
               <MerchantLayer
                 network={chain}
                 token={merchantToken}
                 amount={Number(merchantAmount)}
+                setActiveTab={setActiveTab}
               />
             )}
 
@@ -118,12 +138,10 @@ const Transfer = () => {
                     <h4>Send to merchant address</h4>
                     <div className="pb-3 swap-area">
                       <span className="token-swap__amount">
-                        {`${'0x0cf76957af81329917e7c29f8cbf9b8fad7842ce'?.substring(
+                        {`${merchantAddress.substring(
                           0,
                           6,
-                        )}.......${'0x0cf76957af81329917e7c29f8cbf9b8fad7842ce'.substring(
-                          36,
-                        )}`}
+                        )}.......${merchantAddress.substring(36)}`}
                       </span>
                       <div className="token-image-details">
                         <img
@@ -173,7 +191,11 @@ const Transfer = () => {
                 amount={merchantAmount}
               />
             )}
+            {activeTab === 'SET_MERCHANT' && (
+              <SetMerchant setActiveTab={setActiveTab} />
+            )}
           </div>
+
           {connectStore.loading && (
             <div className="container-overlay">
               <LoadingIcon />

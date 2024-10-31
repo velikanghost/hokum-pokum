@@ -20,6 +20,11 @@ export const chains = [
     explorer: 'https://sepolia-optimism.etherscan.io',
     icon: 'avalanche.svg',
   },
+  {
+    title: 'Celo',
+    explorer: 'https://explorer.mantle.xyz/',
+    icon: 'celo.svg',
+  },
 ]
 
 //Mainnet
@@ -43,5 +48,10 @@ export const chainss = [
     title: 'Avalanche',
     explorer: 'https://sepolia-optimism.etherscan.io',
     icon: 'avalanche.svg',
+  },
+  {
+    title: 'Mantle',
+    explorer: 'https://explorer.mantle.xyz/',
+    icon: 'mantle.svg',
   },
 ]

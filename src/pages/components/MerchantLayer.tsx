@@ -1,4 +1,6 @@
+import { Button } from '@/components/ui/button'
 import { Token } from '@/lib/types'
+import { Tab } from '@/lib/types/all'
 import { StoreContext } from '@/mobx store/RootStore'
 import { useContext, useEffect, useState } from 'react'
 
@@ -6,9 +8,10 @@ interface Props {
   network: string
   token: Token
   amount: number
+  setActiveTab: (value: Tab) => void
 }
 
-const MerchantLayer = ({ network, token, amount }: Props) => {
+const MerchantLayer = ({ network, token, amount, setActiveTab }: Props) => {
   const { connectStore } = useContext(StoreContext)
   const [merchantPrice] = useState<number>(0)
 
@@ -81,6 +84,13 @@ const MerchantLayer = ({ network, token, amount }: Props) => {
           ${conversionValue} to{' '}
           <span style={{ textTransform: 'capitalize' }}>{network}</span>
         </p>
+        <Button
+          onClick={() => setActiveTab('SET_MERCHANT')}
+          className="p-0 mb-0 btn-secondary change-token-btn"
+          style={{ padding: '8px 12px', borderRadius: '17px' }}
+        >
+          Set Test Merchant
+        </Button>
       </div>
     </div>
   )
