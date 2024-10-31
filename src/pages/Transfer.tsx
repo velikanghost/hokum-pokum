@@ -29,8 +29,8 @@ const Transfer = () => {
   const [activeTab, setActiveTab] = useState<Tab>('DEFAULT')
   const [userToken, setUserToken] = useState<Token>()
 
-  const [merchantToken] = useState<Token>(tokens[2])
-  const [chain] = useState<string>('Arbitrum Sepolia')
+  const merchantToken = tokens[2]
+  const chain = 'Arbitrum Sepolia'
 
   const getAccount = async () => {
     await connectStore.connectWallet()
@@ -54,7 +54,7 @@ const Transfer = () => {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join('')
 
-    await connectStore.bridgeTest(
+    await connectStore.bridgeViaRouter(
       chainFrom as Chain,
       chainTo as Chain,
       userToken?.address!,
