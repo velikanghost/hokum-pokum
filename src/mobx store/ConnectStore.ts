@@ -8,7 +8,6 @@ import {
   Chain,
   routes,
   canonicalAddress,
-  TransferRequest,
 } from '@wormhole-foundation/sdk'
 import {
   MayanRouteMCTP,
@@ -24,6 +23,7 @@ import { Token } from '@/lib/types'
 import axios from 'axios'
 import { Connection } from '@solana/web3.js'
 import { UsdPrice } from '@/lib/types/all'
+import { toast } from 'sonner'
 
 type Account = {
   address: string
@@ -303,182 +303,6 @@ export class ConnectStore {
     return selectedRoute || null
   }
 
-  bridgeTest = async (
-    source: Chain,
-    destination: Chain,
-    selectedToken: string,
-    amount: string,
-    destinationAddress: string,
-  ) => {
-    this.setLoading(true)
-    console.log({ source, destination, amount })
-    // Get the current chain ID
-    const currentChainId = await window.ethereum.request({
-      method: 'eth_chainId',
-    })
-
-    const sourceChainId = this.getChainIdByNetworkName(source)
-
-    // Check if we're not on Sepolia
-    if (currentChainId !== sourceChainId) {
-      console.log(`Not on ${source} , switching...`)
-
-      // Attempt to switch to Sepolia
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: sourceChainId }],
-      })
-      console.log(`Successfully switched to ${source}`)
-    } else {
-      console.log('Already on required chain')
-    }
-
-    const wh = await wormhole('Testnet', [evm, solana], {
-      chains: this.chains,
-    })
-
-    // Grab a ChainContext object from our configured Wormhole instance
-    const ctx = wh.getChain(source)
-    const rcv = wh.getChain(destination)
-
-    let sender: MetaMaskSigner | SolanaWalletSigner
-
-    if (source === 'Solana') {
-      sender = new SolanaWalletSigner(
-        this.solanaConnection,
-        ctx.chain,
-        this.userSolanaWallet,
-        this.userSolanaAddress,
-      )
-    } else {
-      sender = new MetaMaskSigner(
-        this.userEvmAccount as JsonRpcSigner,
-        ctx.chain,
-        this.userEvmAddress,
-      )
-    }
-
-    const receiver = new MetaMaskSigner(
-      this.userEvmAccount as JsonRpcSigner,
-      rcv.chain,
-      this.userEvmAddress,
-    )
-
-    // Create new resolver, passing the set of routes to consider
-    const resolver = wh.resolver([
-      routes.AutomaticTokenBridgeRoute,
-      routes.CCTPRoute,
-      routes.AutomaticCCTPRoute,
-      routes.AutomaticPorticoRoute,
-      MayanRouteMCTP,
-      MayanRouteSWIFT,
-      MayanRouteWH,
-    ])
-    // EXAMPLE_RESOLVER_CREATE
-
-    // EXAMPLE_RESOLVER_LIST_TOKENS
-    // what tokens are available on the source chain?
-    const srcTokens = await resolver.supportedSourceTokens(ctx)
-    console.log(
-      'Allowed source tokens: ',
-      srcTokens.map((t) => canonicalAddress(t)),
-    )
-
-    // Grab the first one for the example
-    // const sendToken = srcTokens[0]!;
-    const sendToken = Wormhole.tokenId(ctx.chain, selectedToken)
-
-    // given the send token, what can we possibly get on the destination chain?
-    const destTokens = await resolver.supportedDestinationTokens(
-      sendToken,
-      ctx,
-      rcv,
-    )
-    console.log(
-      'For the given source token and routes configured, the following tokens may be receivable: ',
-      destTokens.map((t) => canonicalAddress(t)),
-    )
-    //grab the first one for the example
-    const destinationToken = destTokens[0]!
-    // EXAMPLE_RESOLVER_LIST_TOKENS
-
-    // EXAMPLE_REQUEST_CREATE
-    // creating a transfer request fetches token details
-    // since all routes will need to know about the tokens
-    const tr = await routes.RouteTransferRequest.create(wh, {
-      source: sendToken,
-      destination: destinationToken,
-    })
-
-    // resolve the transfer request to a set of routes that can perform it
-    const foundRoutes = await resolver.findRoutes(tr)
-    console.log(
-      'For the transfer parameters, we found these routes: ',
-      foundRoutes,
-    )
-    // EXAMPLE_REQUEST_CREATE
-
-    // Sort the routes given some input (not required for mvp)
-    // const bestRoute = (await resolver.sortRoutes(foundRoutes, "cost"))[0]!;
-    const bestRoute = foundRoutes[0]!
-    console.log('Selected: ', bestRoute)
-
-    // EXAMPLE_REQUEST_VALIDATE
-    console.log(
-      'This route offers the following default options',
-      bestRoute.getDefaultOptions(),
-    )
-    // Specify the amount as a decimal string
-    const amt = amount
-    // Create the transfer params for this request
-    const transferParams = { amount: amt, options: { nativeGas: 0 } }
-
-    // validate the transfer params passed, this returns a new type of ValidatedTransferParams
-    // which (believe it or not) is a validated version of the input params
-    // this new var must be passed to the next step, quote
-    const validated = await bestRoute.validate(tr, transferParams)
-    if (!validated.valid) throw validated.error
-    console.log('Validated parameters: ', validated.params)
-
-    // get a quote for the transfer, this too returns a new type that must
-    // be passed to the next step, execute (if you like the quote)
-    const quote = await bestRoute.quote(tr, validated.params)
-    if (!quote.success) throw quote.error
-    console.log('Best route quote: ', quote)
-    // EXAMPLE_REQUEST_VALIDATE
-
-    const merchantAddress = new EvmAddress(destinationAddress)
-
-    //evm
-    const receiverAddress = {
-      chain: destination,
-      address: merchantAddress,
-    }
-
-    // If you're sure you want to do this, set this to true
-    const imSure = true
-    if (imSure) {
-      // EXAMPLE_REQUEST_INITIATE
-      // Now the transfer may be initiated
-      // A receipt will be returned, guess what you gotta do with that?
-      console.log({ tr })
-      const receipt = await bestRoute.initiate(
-        tr,
-        sender,
-        quote,
-        receiverAddress,
-      )
-      console.log('Initiated transfer with receipt: ', receipt)
-      // EXAMPLE_REQUEST_INITIATE
-
-      // Kick off a wait log, if there is an opportunity to complete, this function will do it
-      // see the implementation for how this works
-      await routes.checkAndCompleteTransfer(bestRoute, receipt, receiver)
-    } else {
-      console.log('Not initiating transfer (set `imSure` to true to do so)')
-    }
-  }
-
   bridgeViaRouter = async (
     source: Chain,
     destination: Chain,
@@ -487,7 +311,6 @@ export class ConnectStore {
     destinationAddress: string,
   ) => {
     this.setLoading(true)
-    console.log({ source, destination, amount })
     // Get the current chain ID
     const currentChainId = await window.ethereum.request({
       method: 'eth_chainId',
@@ -525,6 +348,16 @@ export class ConnectStore {
         ctx.chain,
         this.userSolanaWallet,
         this.userSolanaAddress,
+      )
+    } else if (source === 'Avalanche') {
+      sender = new MetaMaskSigner(
+        this.userEvmAccount as JsonRpcSigner,
+        ctx.chain,
+        this.userEvmAddress,
+        {
+          maxFeePerGas: 25_000_000_000n,
+          maxPriorityFeePerGas: 22_000_000_000n,
+        },
       )
     } else {
       sender = new MetaMaskSigner(
@@ -575,7 +408,7 @@ export class ConnectStore {
         })
 
         const foundRoutes = await resolver.findRoutes(tr)
-        console.log(`Found routes for destinationToken:`, foundRoutes)
+        //console.log(`Found routes for destinationToken:`, foundRoutes)
 
         return foundRoutes.length ? { tr, foundRoutes } : null // Return { tr, foundRoutes } or null if no routes
       }),
@@ -588,8 +421,8 @@ export class ConnectStore {
     )
     const transferRequests = nonEmptyResults.map((result) => result?.tr)
 
-    console.log('All non-empty found routes:', nonEmptyFoundRoutes)
-    console.log('Associated transfer requests (tr):', transferRequests[0])
+    //console.log('All non-empty found routes:', nonEmptyFoundRoutes)
+    //console.log('Associated transfer requests (tr):', transferRequests[0])
 
     this.setAvailableRoutes(nonEmptyFoundRoutes)
 
@@ -640,7 +473,7 @@ export class ConnectStore {
       bestRoute = firstRoute
     }
 
-    console.log('quotesArr: ', quotesArray)
+    //console.log('quotesArr: ', quotesArray)
 
     bestQuote = quotesArray.filter((arr: any) => arr.relayFee)[0]
 
@@ -648,8 +481,8 @@ export class ConnectStore {
       bestQuote = quotesArray[0]
     }
 
-    console.log('bestRoute: ', bestRoute)
-    console.log('bestQuote: ', bestQuote)
+    //console.log('bestRoute: ', bestRoute)
+    //console.log('bestQuote: ', bestQuote)
 
     this.setBestRouteQuote(bestQuote)
 
@@ -661,6 +494,17 @@ export class ConnectStore {
       address: merchantAddress,
     }
 
+    if (!bestRoute) {
+      this.setLoading(false)
+      this.setBridgeComplete(false)
+      toast('No route found for token selected.', {
+        description: 'Support for all tokens coming soon.',
+        duration: 3000,
+        position: 'top-center',
+      })
+      return
+    }
+
     // If you're sure you want to do this, set this to true
     const imSure = true
     if (bestRoute && imSure) {
@@ -668,14 +512,14 @@ export class ConnectStore {
       // A receipt will be returned, guess what you gotta do with that?
 
       try {
-        const receipt: TransferRequest = await bestRoute.initiate(
+        const receipt = await bestRoute.initiate(
           transferRequests[0],
           sender,
           bestQuote,
           receiverAddress,
         )
 
-        console.log('Initiated transfer with receipt: ', receipt)
+        //console.log('Initiated transfer with receipt: ', receipt)
         this.setInitiateReceipt(receipt)
       } catch (error) {
         console.log(error)
@@ -697,19 +541,20 @@ export class ConnectStore {
 
       // Kick off a wait log, if there is an opportunity to complete, this function will do it
       // See the implementation for how this works
+
       const finalReceipt = await routes.checkAndCompleteTransfer(
         bestRoute,
         this.initiateReceipt,
         receiver,
       )
-      console.log(finalReceipt)
       if (finalReceipt) {
         this.setFinalReceipt(finalReceipt)
+        this.setTransactionHash(this.finalReceipt.originTxs[0].txid)
         this.setLoading(false)
         this.setBridgeComplete(true)
       }
     } else {
-      console.log('Not initiating transfer (set `imSure` to true to do so)')
+      //console.log('Not initiating transfer (set `imSure` to true to do so)')
       this.setLoading(false)
       this.setBridgeComplete(false)
     }
@@ -724,18 +569,8 @@ export class ConnectStore {
     // Check if error is an object with a JSON-RPC error format
     if (error && typeof error === 'object' && error.code && error.message) {
       // Handle the JSON-RPC error differently
-      console.log('Handling JSON-RPC error:', error.message)
+      //console.log('Handling JSON-RPC error:', error.message)
 
-      // You might want to extract data from the payload, if it exists
-      if (error.payload && Array.isArray(error.payload.params)) {
-        const transactionData = error.payload.params[0]
-        if (transactionData) {
-          const chainId = transactionData.chainId
-          const fromAddress = transactionData.from
-          console.log('Chain ID:', chainId)
-          console.log('From Address:', fromAddress)
-        }
-      }
       return 'JSON-RPC error' // Return or handle specific error info
     } else if (errorMessage.match(hexRegex)) {
       // If it's the simple error message, extract the hex value
@@ -749,7 +584,6 @@ export class ConnectStore {
 
   getUserTokensInWallet = async (publicAddress: string, chain: string) => {
     const tokensArray: Token[] = []
-    console.log(chain)
     let prefix: string
     if (chain === 'optimism-sepolia') {
       prefix = chain.split('-')[0].toLowerCase()
@@ -790,8 +624,6 @@ export class ConnectStore {
 
       const data = await response.json()
       const nativeCurrency = await native.json()
-
-      console.log({ data, nativeCurrency })
 
       if (prefix === 'avalanche') {
         tokensArray.push({

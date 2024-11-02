@@ -39,8 +39,9 @@ const SetMerchant = ({ setActiveTab }: SelectTokenProps) => {
           style={{ cursor: 'pointer' }}
         />
       </div>
+      <h3 className="mb-4 text-xl font-medium">Input either or both.</h3>
       <div className="flex flex-col">
-        <label htmlFor="">Amount</label>
+        <label htmlFor="">Amount in USD</label>
         <input
           type="number"
           name="amount"

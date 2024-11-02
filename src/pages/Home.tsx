@@ -8,8 +8,8 @@ const Home = () => {
     <>
       <section className="relative h-[100dvh] bg-[#1F2026]">
         <Navbar />
-        <div className="container w-full mx-auto lg:absolute lg:top-1/2 lg:left-1/2 lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2">
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-20 pb-[60px] lg:pb-0">
+        <div className="container absolute w-full mx-auto transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
+          <div className="flex flex-col items-center justify-between gap-20 lg:flex-row">
             <div className="flex-1 text-center">
               <h1 className="text-secondary drop-shadow-sm text-[40px] md:text-[60px] lg:text-[65px] leading-[120%] font-headings font-bold mb-6">
                 Instant Transactions <br /> One Click, Any Chain.
