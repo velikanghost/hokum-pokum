@@ -11,6 +11,13 @@ import { Button } from '@/components/ui/button'
 import { BsJournalText } from 'react-icons/bs'
 import { RxExit } from 'react-icons/rx'
 import { useLocation, useNavigate } from 'react-router-dom'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@radix-ui/react-dropdown-menu'
 
 const Navbar = () => {
   const navigate = useNavigate()
@@ -73,13 +80,27 @@ const Navbar = () => {
                     {item.icon} {item.name}
                   </NavigationMenuLink>
                 ))}
-                <Button
-                  variant="nav"
-                  className="btn-primary hover:animate-pulse"
-                  onClick={() => navigate('/demo')}
-                >
-                  Try Demo
-                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="trydemo_btn bg-[#EBE8E2] text-secondary-foreground hover:bg-[#EBE8E2]/90 hover:animate-pulse font-medium text-base">
+                    Try Demo
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="p-4 mt-2 -ml-20 bg-primary-foreground text-secondary-foreground w-[12.5rem] rounded-[4px]">
+                    <DropdownMenuItem
+                      className="mb-3 cursor-pointer"
+                      onClick={() => navigate('/demo')}
+                    >
+                      For Shoppers
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => navigate('/merchant')}
+                    >
+                      For Merchants
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </>
           )}

@@ -1,5 +1,5 @@
 import { useContext, useEffect } from 'react'
-import { BiLeftArrowAlt, BiSearchAlt } from 'react-icons/bi'
+import { BiLeftArrowAlt } from 'react-icons/bi'
 import { Token } from '@/lib/types'
 import { Chain } from '@/lib/types/chain'
 import { chains } from '@/lib/data/chains'
@@ -93,33 +93,40 @@ const SelectToken = ({ setActiveTab, setToken, amount }: SelectTokenProps) => {
           </div>
         ))}
       </div>
-      <div className="search-form">
+      {/* <div className="search-form">
         <input type="text" placeholder="Enter token name or address" />
         <BiSearchAlt size={30} />
-      </div>
+      </div> */}
+      <hr />
       <div className="mt-8 tokens-list">
-        {userTokensInWallet?.map((token, i) => (
-          <div
-            className="token-details"
-            key={i}
-            onClick={() => selectUserToken(token)}
-          >
-            <img
-              src={`/images/tokens/${token?.symbol?.toLowerCase()}.svg`}
-              alt="token"
-              className="token-image"
-              width={100}
-              height={100}
-            />
-            <div className="w-full">
-              <div className="token-symbol">{token?.symbol}</div>
-              <div className="token-name">{token?.name?.toUpperCase()}</div>
+        {userTokensInWallet.length > 0 ? (
+          userTokensInWallet?.map((token, i) => (
+            <div
+              className="token-details"
+              key={i}
+              onClick={() => selectUserToken(token)}
+            >
+              <img
+                src={`/images/tokens/${token?.symbol?.toLowerCase()}.svg`}
+                alt="token"
+                className="token-image"
+                width={100}
+                height={100}
+              />
+              <div className="w-full">
+                <div className="token-symbol">{token?.symbol}</div>
+                <div className="token-name">{token?.name?.toUpperCase()}</div>
+              </div>
+              <div className="">
+                {getBalance(token?.balance!, token?.decimals!)}
+              </div>
             </div>
-            <div className="">
-              {getBalance(token?.balance!, token?.decimals!)}
-            </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <p className="mt-4 text-center">
+            No tokens in wallet for the selected network.
+          </p>
+        )}
       </div>
     </>
   )

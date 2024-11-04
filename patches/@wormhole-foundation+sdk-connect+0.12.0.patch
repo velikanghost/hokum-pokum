@@ -1,0 +1,45 @@
+diff --git a/node_modules/@wormhole-foundation/sdk-connect/dist/esm/routes/common.js b/node_modules/@wormhole-foundation/sdk-connect/dist/esm/routes/common.js
+index f3fb5ca..56f0bd9 100644
+--- a/node_modules/@wormhole-foundation/sdk-connect/dist/esm/routes/common.js
++++ b/node_modules/@wormhole-foundation/sdk-connect/dist/esm/routes/common.js
+@@ -7,17 +7,23 @@ import { TransferState, isAttested, isCompleted, isRedeemed } from "../types.js"
+  * @param receipt The receipt to track
+  * @param destinationSigner The signer for the destination chain if
+  */
+-export async function checkAndCompleteTransfer(route, receipt, destinationSigner, timeout = 120 * 1000, 
+-// byo logger but im dumping to console rn 🙃
+-log = console.log) {
++
++export async function checkAndCompleteTransfer(route, receipt, destinationSigner, timeout = 120 * 1000, log = console.log) {
+     const start = Date.now();
+-    log("Checking transfer state...");
+-    // overwrite receipt var as we receive updates, will return when it's complete
+-    // but can be called again if the destination is not finalized
+-    // this construct is to drain an async generator and return the last value
+-    for await (receipt of route.track(receipt, 120 * 1000)) {
++    log("Starting transfer tracking now...");
++
++    for await (receipt of route.track(receipt, timeout)) {
+         log("Current Transfer State: ", TransferState[receipt.state]);
++
++        if (TransferState[receipt.state] === 'SourceFinalized') {
++            return receipt
++        }
++
++        if (TransferState[receipt.state] === 'Attested') {
++            return receipt
++        }
+     }
++
+     // gucci
+     if (isCompleted(receipt))
+         return receipt;
+@@ -42,6 +48,7 @@ log = console.log) {
+         await new Promise((resolve) => setTimeout(resolve, wait));
+         return checkAndCompleteTransfer(route, receipt, destinationSigner, leftover);
+     }
++
+     return receipt;
+ }
+ //# sourceMappingURL=common.js.map
+\ No newline at end of file

@@ -19,3 +19,22 @@ export type Tokens = {
   total_supply: null | string
   total_supply_formatted: null | string
 }
+
+export type MerchantTransactions = {
+  hash: string
+  source: number
+  sourceFormatted: string
+  destination: number
+  destinationFormatted: string
+  protocol: string
+  status: string
+  amount: string
+  tokenAddress: string
+  vaa: VAA
+}
+
+export type VAA = {
+  raw: string
+  guardianSetIndex: number
+  isDuplicated: boolean
+}

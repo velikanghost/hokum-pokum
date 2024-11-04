@@ -1,4 +1,4 @@
-import { JsonRpcSigner, TransactionRequest } from 'ethers' // Import the correct types from ethers v6
+import { JsonRpcSigner, TransactionRequest } from 'ethers'
 import {
   SignAndSendSigner,
   UnsignedTransaction,
@@ -26,7 +26,7 @@ export type SolanaSignerOptions = {
 }
 
 export class MetaMaskSigner implements SignAndSendSigner<Network, Chain> {
-  provider: JsonRpcSigner // Corrected the provider type for ethers v6
+  provider: JsonRpcSigner
   chainName: Chain
   userAddress: string
   opts?: MetaMaskSignerOptions
@@ -39,8 +39,8 @@ export class MetaMaskSigner implements SignAndSendSigner<Network, Chain> {
   ) {
     this.provider = provider
     this.chainName = chainName
-    this.userAddress = userAddress // Address is now directly passed in
-    this.opts = opts || {} // Initialize the options with default or user-provided values
+    this.userAddress = userAddress
+    this.opts = opts || {}
   }
 
   chain(): Chain {
@@ -51,27 +51,24 @@ export class MetaMaskSigner implements SignAndSendSigner<Network, Chain> {
     return this.userAddress
   }
 
-  // signAndSend method with custom gas settings
   async signAndSend(tx: UnsignedTransaction[]): Promise<TxHash[]> {
     const txHashes: TxHash[] = []
 
-    // Default gas values
     let gasLimit = this.opts?.gasLimit || 1_000_000n
-    let maxFeePerGas = this.opts?.maxFeePerGas || 3_000_000_000n // 8.5 gwei
-    let maxPriorityFeePerGas = this.opts?.maxPriorityFeePerGas || 1_000_000_000n // 7.5 gwei
+    let maxFeePerGas = this.opts?.maxFeePerGas || 12_000_000_000n
+    let maxPriorityFeePerGas = this.opts?.maxPriorityFeePerGas || 8_000_000_000n
 
     for (const transaction of tx) {
       const transactionRequest: TransactionRequest = {
         ...transaction.transaction,
-        from: this.userAddress, // Address is set from the property
+        from: this.userAddress,
         gasLimit,
         maxFeePerGas,
         maxPriorityFeePerGas,
       }
 
-      // Send the transaction using the provided signer
       const txResponse = await this.provider.sendTransaction(transactionRequest)
-      txHashes.push(txResponse.hash) // Extract the transaction hash
+      txHashes.push(txResponse.hash)
     }
 
     return txHashes
