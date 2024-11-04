@@ -13,13 +13,19 @@ body {
 
 .btn-primary {
   padding: 1.5rem;
-  border-radius: 12px;
+  border-radius: 4px;
   border: 1px solid #ebe8e2;
+}
+
+.trydemo_btn {
+  padding: 0.7rem 1.4rem;
+  border-radius: 4px;
+  border: 1px solid #ebe8e2;
+  outline: none;
 }
 
 .btn-secondary {
   padding: 1.5rem;
-  border-radius: 12px;
   border: 1px solid $off-black;
 }
 

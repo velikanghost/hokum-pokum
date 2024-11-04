@@ -6,6 +6,7 @@ import Home from './pages/Home.tsx'
 import ErrorPage from './error-page.tsx'
 import Transfer from './pages/Transfer.tsx'
 import Merchant from './pages/Merchant.tsx'
+import { Toaster } from 'sonner'
 
 const router = createBrowserRouter([
   {
@@ -33,5 +34,6 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RouterProvider router={router} />
+    <Toaster />
   </StrictMode>,
 )

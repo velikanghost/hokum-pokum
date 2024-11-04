@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom'
 import { MdArrowOutward } from 'react-icons/md'
 import { Tab } from '@/lib/types/all'
 import SetMerchant from './components/SetMerchant'
+import { toast } from 'sonner'
 
 const Transfer = () => {
   const { connectStore } = useContext(StoreContext)
@@ -44,7 +45,10 @@ const Transfer = () => {
 
   const beginTransfer = async () => {
     if (!userToken?.address) {
-      alert('Select a token first!')
+      toast('Select a token first!', {
+        duration: 1100,
+        position: 'top-center',
+      })
       return
     }
 
@@ -159,12 +163,12 @@ const Transfer = () => {
                 )}
 
                 {bridgeComplete && (
-                  <div className="my-3 bg-[#EBE8E2]/70 token-swap-card">
+                  <div className="my-3 bg-[#EBE8E2]/90 token-swap-card">
                     <p className="mb-3 text-2xl font-semibold text-secondary-foreground">
-                      Payment complete
+                      Checkout complete
                     </p>
                     <Link
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 "
                       target="_blank"
                       to={`https://wormholescan.io/#/tx/${transactionHash}?network=Testnet`}
                     >
@@ -172,6 +176,14 @@ const Transfer = () => {
                       <MdArrowOutward />
                     </Link>
                   </div>
+                )}
+                {bridgeComplete && (
+                  <Button
+                    onClick={() => connectStore.setBridgeComplete(false)}
+                    className="w-full rounded"
+                  >
+                    Make a new Payment
+                  </Button>
                 )}
                 {bridgeComplete ? null : (
                   <Button

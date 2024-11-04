@@ -1,48 +1,63 @@
-import { BiDollarCircle } from 'react-icons/bi'
-import Navbar from './components/Layouts/Navbar'
+import DataTable from './components/Table'
+import { observer } from 'mobx-react-lite'
+import { useContext, useEffect } from 'react'
+import { StoreContext } from '@/mobx store/RootStore'
+import MerchantNavbar from './components/Layouts/MerchantNavbar'
 
 const Merchant = () => {
+  const { merchantStore } = useContext(StoreContext)
+  const {
+    merchantEvmAccount,
+    allMerchantOperations,
+    merchantPendingOperations,
+  } = merchantStore
+
+  useEffect(() => {
+    merchantStore.fetchAllOperations(merchantEvmAccount.address)
+  }, [merchantEvmAccount])
+
   return (
-    <div className="h-[100vh] bg-[#1F2026]">
-      <Navbar />
-      <div className="container flex flex-col items-center justify-center flex-1 px-6 mx-auto text-secondary lg:items-start">
+    <div className="min-h-[100dvh] bg-[#1F2026]">
+      <MerchantNavbar />
+      <div className="container flex flex-col items-center justify-center flex-1 px-6 mx-auto mt-10 text-secondary lg:items-start">
         <div className="flex items-center justify-start w-full gap-6">
-          <div className="border border-lime-100 rounded-[8px]">
-            <h2 className="flex items-center justify-between">
-              Total Revenue <BiDollarCircle />
+          <div className="border border-secondary rounded-[4px] p-6 min-w-[250px]">
+            <h2 className="flex items-center justify-between text-base font-semibold">
+              Total Transactions
             </h2>
-            <p>10000</p>
-            <span>+20% from last month</span>
+            <p className="text-3xl font-medium">
+              {allMerchantOperations.length}
+            </p>
           </div>
-          <div className="border border-lime-100 rounded-[8px]">
-            <h2 className="flex items-center justify-between">
-              Completed <BiDollarCircle />
+
+          <div className="border border-secondary rounded-[4px] p-6 min-w-[250px]">
+            <h2 className="flex items-center justify-between text-base font-semibold">
+              Pending Transactions
             </h2>
-            <p>10000</p>
-            <span>+20% from last month</span>
+            <p className="text-3xl font-medium">
+              {merchantPendingOperations.length}
+            </p>
           </div>
-          <div className="border border-lime-100 rounded-[8px]">
-            <h2 className="flex items-center justify-between">
-              Finalized <BiDollarCircle />
+
+          <div className="border border-secondary rounded-[4px] p-6 min-w-[250px]">
+            <h2 className="flex items-center justify-between text-base font-semibold">
+              Complete Transactions
             </h2>
-            <p>10000</p>
-            <span>+20% from last month</span>
+            <p className="text-3xl font-medium">
+              {Math.abs(
+                allMerchantOperations.length - merchantPendingOperations.length,
+              )}
+            </p>
           </div>
-          {/* <div className="border border-lime-100">
-            <h2 className="flex items-center justify-between">
-              Total Revenue <BiDollarCircle />
-            </h2>
-            <p>10000</p>
-            <span>+20% from last month</span>
-          </div> */}
         </div>
 
-        <div className="r">
-          <h2>Recent Sales</h2>
+        <div className="w-full mt-10">
+          <h2 className="mb-3 text-xl font-semibold">Recent Payments</h2>
+          <DataTable />
         </div>
       </div>
     </div>
   )
 }
 
-export default Merchant
+export default observer(Merchant)

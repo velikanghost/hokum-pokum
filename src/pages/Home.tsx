@@ -1,4 +1,10 @@
-import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import Navbar from './components/Layouts/Navbar'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -8,8 +14,8 @@ const Home = () => {
     <>
       <section className="relative h-[100dvh] bg-[#1F2026]">
         <Navbar />
-        <div className="container w-full mx-auto lg:absolute lg:top-1/2 lg:left-1/2 lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2">
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-20 pb-[60px] lg:pb-0">
+        <div className="container absolute w-full mx-auto transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
+          <div className="flex flex-col items-center justify-between gap-20 lg:flex-row">
             <div className="flex-1 text-center">
               <h1 className="text-secondary drop-shadow-sm text-[40px] md:text-[60px] lg:text-[65px] leading-[120%] font-headings font-bold mb-6">
                 Instant Transactions <br /> One Click, Any Chain.
@@ -23,17 +29,30 @@ const Home = () => {
                 <Link
                   to="https://heekowave.substack.com/"
                   target="_blank"
-                  className="rounded-[12px] border border-[#ebe8e2] text-primary-foreground py-3 px-6"
+                  className="rounded-[4px] border border-[#ebe8e2] text-primary-foreground py-3 px-6"
                 >
                   Read our Blog
                 </Link>
-                <Button
-                  variant="nav"
-                  className="btn-primary"
-                  onClick={() => navigate('/demo')}
-                >
-                  Try Demo
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="trydemo_btn bg-[#EBE8E2] text-secondary-foreground hover:bg-[#EBE8E2]/90">
+                    Try Demo
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="mt-1 ml-20 bg-primary-foreground text-secondary-foreground w-[12.5rem] rounded text-base">
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => navigate('/demo')}
+                    >
+                      For Shoppers
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => navigate('/merchant')}
+                    >
+                      For Merchants
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
