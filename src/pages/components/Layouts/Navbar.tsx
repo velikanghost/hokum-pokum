@@ -8,7 +8,6 @@ import { RiMenu2Line, RiTwitterXLine } from 'react-icons/ri'
 import { MobileSidebar } from './MobileSidebar'
 import { NavigationMenuLink } from '@radix-ui/react-navigation-menu'
 import { Button } from '@/components/ui/button'
-import { BsJournalText } from 'react-icons/bs'
 import { RxExit } from 'react-icons/rx'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -29,11 +28,11 @@ const Navbar = () => {
       name: 'Twitter/X',
       link: 'https://x.com/heekowave',
     },
-    {
-      icon: <BsJournalText size={18} />,
-      name: 'Writings',
-      link: 'https://heekowave.substack.com',
-    },
+    // {
+    //   icon: <BsJournalText size={18} />,
+    //   name: 'Writings',
+    //   link: 'https://heekowave.substack.com',
+    // },
   ]
 
   return (

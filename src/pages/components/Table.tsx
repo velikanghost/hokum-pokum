@@ -103,7 +103,7 @@ const DataTable = () => {
               className="px-2 py-1 capitalize rounded text-secondary-foreground btn-primary"
               disabled
             >
-              Redeem
+              Finalized
             </Button>
           )
         }
