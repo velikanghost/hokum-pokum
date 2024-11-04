@@ -51,7 +51,7 @@ const Merchant = () => {
           </div>
         </div>
 
-        <div className="w-full mt-10">
+        <div className="relative w-full mt-10">
           <h2 className="mb-3 text-xl font-semibold">Recent Payments</h2>
           <DataTable />
         </div>

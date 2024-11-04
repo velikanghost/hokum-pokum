@@ -118,6 +118,15 @@ const DataTable = () => {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+  const [statusFilter, setStatusFilter] = React.useState<string>('')
+
+  // Update column filters when status changes
+  React.useEffect(() => {
+    setColumnFilters((filters) => [
+      ...filters.filter((filter) => filter.id !== 'status'),
+      ...(statusFilter ? [{ id: 'status', value: statusFilter }] : []),
+    ])
+  }, [statusFilter])
 
   const table = useReactTable({
     data: allMerchantOperations,
@@ -140,6 +149,17 @@ const DataTable = () => {
 
   return (
     <div className="w-full">
+      <div className="absolute right-0 flex items-center justify-between mb-4 -top-1 bg-primary-foreground">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-2 py-1 border rounded text-secondary-foreground"
+        >
+          <option value="">All</option>
+          <option value="pending">Pending</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
       <div className="border rounded-[4px]">
         <Table>
           <TableHeader>
