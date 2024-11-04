@@ -7,6 +7,7 @@ import { MetaMaskSigner } from '@/lib/helpers/signer'
 import axios from 'axios'
 import { toast } from 'sonner'
 import { MerchantTransactions } from '@/lib/types/all'
+import { networks } from '@/lib/data'
 
 type Account = {
   address: string
@@ -125,8 +126,6 @@ export class MerchantStore {
           return
         }
 
-        console.log(response.data.operations)
-
         let arr: any = []
         await response.data?.operations.forEach((op: any) => {
           const obj = {
@@ -174,6 +173,27 @@ export class MerchantStore {
     return networkChainIds[networkName] || undefined
   }
 
+  addNetwork = (chainId: string) => {
+    const network = networks[chainId]
+
+    if (network) {
+      // If the network exists, call the function to add the network
+      window.ethereum
+        .request({
+          method: 'wallet_addEthereumChain',
+          params: [network],
+        })
+        .then(() => {
+          console.log(`${network.chainName} has been added.`)
+        })
+        .catch((error: any) => {
+          console.error(`Failed to add network: ${error.message}`)
+        })
+    } else {
+      console.error('Network not found')
+    }
+  }
+
   redeemAndFinalize = async (destinationChain: Chain, recoverTxid: string) => {
     this.setLoading(true)
 
@@ -188,12 +208,28 @@ export class MerchantStore {
     if (currentChainId !== sourceChainId) {
       console.log(`Not on ${destinationChain} , switching...`)
 
-      // Attempt to switch to Sepolia
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: sourceChainId }],
-      })
-      console.log(`Successfully switched to ${destinationChain}`)
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: sourceChainId }],
+        })
+        console.log(`Successfully switched to ${destinationChain}`)
+      } catch (error: any) {
+        if (error.code === 4902) {
+          try {
+            const network = networks[sourceChainId!]
+            // Add the network (if it doesn't exist in MetaMask)
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [network],
+            })
+          } catch (addError) {
+            console.error('Error adding the network', addError)
+          }
+        } else {
+          console.error('Error switching network', error)
+        }
+      }
     } else {
       console.log('Already on required chain')
     }
@@ -248,6 +284,10 @@ export class MerchantStore {
       const finished = await rcvTb.isTransferCompleted(vaa as any)
       //console.log('Transfer completed: ', finished)
       this.setIsRedeemCompleted(finished)
+      toast('Redeem transaction completed!', {
+        duration: 3000,
+        position: 'top-center',
+      })
     } catch (error) {
       console.error(error)
       this.setLoading(false)

@@ -20,7 +20,7 @@ const Merchant = () => {
     <div className="min-h-[100dvh] bg-[#1F2026]">
       <MerchantNavbar />
       <div className="container flex flex-col items-center justify-center flex-1 px-6 mx-auto mt-10 text-secondary lg:items-start">
-        <div className="flex items-center justify-start w-full gap-6">
+        <div className="flex flex-col items-start justify-start w-full gap-6 md:items-center md:flex-row md:flex-wrap">
           <div className="border border-secondary rounded-[4px] p-6 min-w-[250px]">
             <h2 className="flex items-center justify-between text-base font-semibold">
               Total Transactions
