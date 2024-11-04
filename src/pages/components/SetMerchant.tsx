@@ -45,7 +45,7 @@ const SetMerchant = ({ setActiveTab }: SelectTokenProps) => {
         <input
           type="number"
           name="amount"
-          className="px-4 py-3 mb-4 rounded-[8px] mt-2 text-secondary-foreground"
+          className="px-4 py-3 mt-2 mb-4 rounded text-secondary-foreground"
           placeholder="1"
           min={1}
           onChange={(e) =>
@@ -59,7 +59,7 @@ const SetMerchant = ({ setActiveTab }: SelectTokenProps) => {
         <input
           type="text"
           name="address"
-          className="px-4 py-3 mb-3 rounded-[8px] mt-2 text-secondary-foreground"
+          className="px-4 py-3 mt-2 mb-3 rounded text-secondary-foreground"
           placeholder="Wallet address"
           onChange={(e) =>
             setData((prev) => ({
@@ -70,7 +70,7 @@ const SetMerchant = ({ setActiveTab }: SelectTokenProps) => {
         />
       </div>
       <Button
-        className="w-full mt-6 rounded-[8px] p-6"
+        className="w-full p-6 mt-6 rounded"
         variant="secondary"
         onClick={setMerchant}
       >

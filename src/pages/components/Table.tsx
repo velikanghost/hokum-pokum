@@ -11,7 +11,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { ArrowUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -21,95 +20,97 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { StoreContext } from '@/mobx store/RootStore'
+import { observer } from 'mobx-react-lite'
+import { MerchantTransactions } from '@/lib/types/all'
+import { Chain } from '@wormhole-foundation/sdk'
 
-const data: Payment[] = [
-  {
-    id: 'm5gr84i9',
-    amount: 316,
-    status: 'success',
-    email: 'ken99@yahoo.com',
-  },
-  {
-    id: '3u1reuv4',
-    amount: 242,
-    status: 'success',
-    email: 'Abe45@gmail.com',
-  },
-  {
-    id: 'derv1ws0',
-    amount: 837,
-    status: 'processing',
-    email: 'Monserrat44@gmail.com',
-  },
-  {
-    id: '5kma53ae',
-    amount: 874,
-    status: 'success',
-    email: 'Silas22@gmail.com',
-  },
-  {
-    id: 'bhqecj4p',
-    amount: 721,
-    status: 'failed',
-    email: 'carmella@hotmail.com',
-  },
-]
+const DataTable = () => {
+  const { merchantStore } = React.useContext(StoreContext)
+  const { allMerchantOperations } = merchantStore
 
-export type Payment = {
-  id: string
-  amount: number
-  status: 'pending' | 'processing' | 'success' | 'failed'
-  email: string
-}
+  const handleActionClick = async (row: MerchantTransactions) => {
+    await merchantStore.redeemAndFinalize(
+      row.destinationFormatted as Chain,
+      row.hash,
+    )
+  }
 
-export const columns: ColumnDef<Payment>[] = [
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue('status')}</div>
-    ),
-  },
-  {
-    accessorKey: 'email',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Email
-          <ArrowUpDown className="w-4 h-4 ml-2" />
-        </Button>
-      )
+  const columns: ColumnDef<MerchantTransactions>[] = [
+    {
+      accessorKey: 'hash',
+      header: 'Transaction Hash',
+      cell: ({ row }) => {
+        const hash: string = row.getValue('hash')
+
+        return (
+          <div className="lowercase">{`${hash.substring(
+            0,
+            8,
+          )}...........${hash.substring(56)}`}</div>
+        )
+      },
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue('email')}</div>,
-  },
-  {
-    accessorKey: 'amount',
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('amount'))
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount)
-
-      return <div className="font-medium text-right">{formatted}</div>
+    {
+      accessorKey: 'sourceFormatted',
+      header: 'Source',
+      cell: ({ row }) => (
+        <div className="">{row.getValue('sourceFormatted')}</div>
+      ),
     },
-  },
-  {
-    id: 'actions',
-    enableHiding: false,
-    cell: ({ row }) => {
-      const payment = row.original
+    {
+      accessorKey: 'protocol',
+      header: 'Protocol',
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue('protocol')}</div>
+      ),
     },
-  },
-]
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue('status')}</div>
+      ),
+    },
+    {
+      accessorKey: 'amount',
+      header: () => <div className="text-right">Amount</div>,
+      cell: ({ row }) => {
+        const amount = parseFloat(row.getValue('amount'))
+        const formatted = amount / 1000000
 
-export function DataTable() {
+        return <div className="font-medium text-right">{formatted}</div>
+      },
+    },
+    {
+      accessorKey: 'action',
+      header: 'Action',
+      cell: ({ row }) => {
+        if (row.original.status === 'pending') {
+          return (
+            <Button
+              variant="nav"
+              className="px-2 py-1 capitalize rounded text-secondary-foreground btn-primary"
+              onClick={() => handleActionClick(row.original)}
+            >
+              Redeem
+            </Button>
+          )
+        } else {
+          return (
+            <Button
+              variant="nav"
+              className="px-2 py-1 capitalize rounded text-secondary-foreground btn-primary"
+              disabled
+            >
+              Redeem
+            </Button>
+          )
+        }
+      },
+    },
+  ]
+
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
@@ -119,7 +120,7 @@ export function DataTable() {
   const [rowSelection, setRowSelection] = React.useState({})
 
   const table = useReactTable({
-    data,
+    data: allMerchantOperations,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -139,14 +140,14 @@ export function DataTable() {
 
   return (
     <div className="w-full">
-      <div className="border rounded-md">
+      <div className="border rounded-[4px]">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="font-medium">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -180,9 +181,11 @@ export function DataTable() {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-base text-center"
                 >
                   No results.
+                  <br />
+                  Connect wallet to see your incoming payments.
                 </TableCell>
               </TableRow>
             )}
@@ -190,16 +193,13 @@ export function DataTable() {
         </Table>
       </div>
       <div className="flex items-center justify-end py-4 space-x-2">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{' '}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
         <div className="space-x-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            className="text-secondary-foreground rounded-[4px]"
           >
             Previous
           </Button>
@@ -208,6 +208,7 @@ export function DataTable() {
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            className="text-secondary-foreground rounded-[4px]"
           >
             Next
           </Button>
@@ -216,3 +217,5 @@ export function DataTable() {
     </div>
   )
 }
+
+export default observer(DataTable)

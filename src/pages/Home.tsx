@@ -1,4 +1,10 @@
-import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import Navbar from './components/Layouts/Navbar'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -23,17 +29,30 @@ const Home = () => {
                 <Link
                   to="https://heekowave.substack.com/"
                   target="_blank"
-                  className="rounded-[12px] border border-[#ebe8e2] text-primary-foreground py-3 px-6"
+                  className="rounded-[4px] border border-[#ebe8e2] text-primary-foreground py-3 px-6"
                 >
                   Read our Blog
                 </Link>
-                <Button
-                  variant="nav"
-                  className="btn-primary"
-                  onClick={() => navigate('/demo')}
-                >
-                  Try Demo
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="trydemo_btn bg-[#EBE8E2] text-secondary-foreground hover:bg-[#EBE8E2]/90">
+                    Try Demo
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="mt-1 ml-20 bg-primary-foreground text-secondary-foreground w-[12.5rem] rounded text-base">
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => navigate('/demo')}
+                    >
+                      For Shoppers
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => navigate('/merchant')}
+                    >
+                      For Merchants
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>

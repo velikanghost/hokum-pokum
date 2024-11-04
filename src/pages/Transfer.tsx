@@ -180,7 +180,7 @@ const Transfer = () => {
                 {bridgeComplete && (
                   <Button
                     onClick={() => connectStore.setBridgeComplete(false)}
-                    className="w-full rounded-[8px]"
+                    className="w-full rounded"
                   >
                     Make a new Payment
                   </Button>

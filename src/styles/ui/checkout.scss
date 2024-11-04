@@ -38,7 +38,7 @@
 .token-swap-card {
   padding: 16px;
   border: 1px solid #424350;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 .swap-area {
   display: flex;
@@ -68,7 +68,7 @@
   width: 50%;
   background-color: #1f2026;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 4px;
   gap: 4px;
 }
 .swap-area .token-swap__details .token-image-details {
@@ -111,7 +111,7 @@
   gap: 8px;
 }
 .network-options .network {
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: #1f2026;
   padding: 8px;
   cursor: pointer;
@@ -130,7 +130,7 @@
   align-items: center;
   background-color: #1f2026;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 .search-form input {
   width: 100%;

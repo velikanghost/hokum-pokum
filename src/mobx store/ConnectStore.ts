@@ -137,7 +137,7 @@ export class ConnectStore {
         const provider = new ethers.BrowserProvider(window.ethereum)
         const signer = await provider.getSigner()
         this.setUserEvmAccount(signer)
-        console.log('Connected wallet address:', address)
+        //console.log('Connected wallet address:', address)
       } catch (error: any) {
         console.error('Error connecting wallet:', error)
       }
